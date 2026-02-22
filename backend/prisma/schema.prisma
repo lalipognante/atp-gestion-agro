@@ -1,0 +1,357 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  VIEWER
+}
+
+enum FieldType {
+  PROPIO
+  ALQUILADO
+}
+
+enum StockMovementType {
+  HARVEST
+  PURCHASE
+  SALE
+  TRANSFER
+  ADJUSTMENT
+  INTERNAL_CONSUMPTION
+}
+
+enum LivestockMovementType {
+  INCOME
+  SALE
+  DEATH
+  TRANSFER
+  ADJUSTMENT
+}
+
+enum InputMovementType {
+  PURCHASE
+  USAGE
+  ADJUSTMENT
+}
+
+enum Currency {
+  ARS
+  USD
+}
+
+enum InstallmentStatus {
+  PENDING
+  PAID
+  PARTIAL
+}
+
+enum FinancialDirection {
+  INCOME
+  EXPENSE
+}
+
+enum MarketPriceType {
+  GRAIN
+  CATTLE
+  USD
+}
+
+enum MarketPriceSource {
+  MANUAL
+  API
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+// ─────────────────────────────────────────
+// 1. USERS
+// ─────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         Role
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  auditLogs AuditLog[]
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────
+// 2. FIELDS
+// ─────────────────────────────────────────
+
+model Field {
+  id        String    @id @default(uuid())
+  name      String
+  type      FieldType
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  lots Lot[]
+
+  @@map("fields")
+}
+
+// ─────────────────────────────────────────
+// 3. LOTS
+// ─────────────────────────────────────────
+
+model Lot {
+  id        String   @id @default(uuid())
+  fieldId   String   @map("field_id")
+  surfaceHa Decimal  @map("surface_ha") @db.Decimal(10, 2)
+  location  String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  field          Field           @relation(fields: [fieldId], references: [id])
+  campaigns      Campaign[]
+  stockMovements StockMovement[]
+
+  @@map("lots")
+}
+
+// ─────────────────────────────────────────
+// 4. CAMPAIGNS
+// ─────────────────────────────────────────
+
+model Campaign {
+  id        String   @id @default(uuid())
+  lotId     String   @map("lot_id")
+  year      Int
+  crop      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  lot            Lot             @relation(fields: [lotId], references: [id])
+  stockMovements StockMovement[]
+
+  @@map("campaigns")
+}
+
+// ─────────────────────────────────────────
+// 5. STOCK MOVEMENTS (Granos)
+// ─────────────────────────────────────────
+
+model StockMovement {
+  id           String            @id @default(uuid())
+  product      String
+  movementType StockMovementType @map("movement_type")
+  quantity     Decimal           @db.Decimal(14, 2)
+  unit         String
+  lotId        String?           @map("lot_id")
+  campaignId   String?           @map("campaign_id")
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  lot      Lot?      @relation(fields: [lotId], references: [id])
+  campaign Campaign? @relation(fields: [campaignId], references: [id])
+
+  @@index([product])
+  @@map("stock_movements")
+}
+
+// ─────────────────────────────────────────
+// 6. LIVESTOCK MOVEMENTS (Hacienda)
+// ─────────────────────────────────────────
+
+model LivestockMovement {
+  id           String                @id @default(uuid())
+  category     String
+  movementType LivestockMovementType @map("movement_type")
+  quantity     Int
+  createdAt    DateTime              @default(now()) @map("created_at")
+
+  @@index([category])
+  @@map("livestock_movements")
+}
+
+// ─────────────────────────────────────────
+// 7. INPUT MOVEMENTS (Insumos)
+// ─────────────────────────────────────────
+
+model InputMovement {
+  id           String            @id @default(uuid())
+  product      String
+  movementType InputMovementType @map("movement_type")
+  quantity     Decimal           @db.Decimal(14, 2)
+  unit         String
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  @@map("input_movements")
+}
+
+// ─────────────────────────────────────────
+// 8. SUPPLIERS (Proveedores)
+// ─────────────────────────────────────────
+
+model Supplier {
+  id          String   @id @default(uuid())
+  name        String
+  contactInfo String?  @map("contact_info")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  paymentPlans PaymentPlan[]
+
+  @@map("suppliers")
+}
+
+// ─────────────────────────────────────────
+// 9. PAYMENT PLAN
+// ─────────────────────────────────────────
+
+model PaymentPlan {
+  id                String   @id @default(uuid())
+  supplierId        String?  @map("supplier_id")
+  relatedType       String?  @map("related_type")
+  relatedId         String?  @map("related_id")
+  totalInstallments Int      @map("total_installments")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  supplier     Supplier?              @relation(fields: [supplierId], references: [id])
+  installments ObligationInstallment[]
+
+  @@map("payment_plans")
+}
+
+// ─────────────────────────────────────────
+// 10. OBLIGATION INSTALLMENTS (Cuotas comerciales)
+// ─────────────────────────────────────────
+
+model ObligationInstallment {
+  id                     String            @id @default(uuid())
+  paymentPlanId          String            @map("payment_plan_id")
+  installmentNumber      Int               @map("installment_number")
+  amount                 Decimal           @db.Decimal(14, 2)
+  currency               Currency
+  exchangeRateAtCreation Decimal           @map("exchange_rate_at_creation") @db.Decimal(14, 6)
+  baseCurrencyAmount     Decimal           @map("base_currency_amount") @db.Decimal(14, 2)
+  dueDate                DateTime          @map("due_date") @db.Date
+  status                 InstallmentStatus
+  createdAt              DateTime          @default(now()) @map("created_at")
+
+  paymentPlan PaymentPlan @relation(fields: [paymentPlanId], references: [id])
+
+  @@index([dueDate])
+  @@map("obligation_installments")
+}
+
+// ─────────────────────────────────────────
+// 11. FINANCIAL MOVEMENTS (Ledger)
+// ─────────────────────────────────────────
+
+model FinancialMovement {
+  id                     String             @id @default(uuid())
+  direction              FinancialDirection
+  category               String?
+  amount                 Decimal            @db.Decimal(14, 2)
+  currency               Currency
+  exchangeRateAtCreation Decimal            @map("exchange_rate_at_creation") @db.Decimal(14, 6)
+  baseCurrencyAmount     Decimal            @map("base_currency_amount") @db.Decimal(14, 2)
+  relatedType            String?            @map("related_type")
+  relatedId              String?            @map("related_id")
+  createdAt              DateTime           @default(now()) @map("created_at")
+
+  loanInstallment LoanInstallment?
+
+  @@map("financial_movements")
+}
+
+// ─────────────────────────────────────────
+// 12. LOANS (Créditos Bancarios)
+// ─────────────────────────────────────────
+
+model Loan {
+  id                     String   @id @default(uuid())
+  bank                   String
+  principalAmount        Decimal  @map("principal_amount") @db.Decimal(14, 2)
+  currency               Currency
+  exchangeRateAtCreation Decimal  @map("exchange_rate_at_creation") @db.Decimal(14, 6)
+  baseCurrencyAmount     Decimal  @map("base_currency_amount") @db.Decimal(14, 2)
+  interestRate           Decimal  @map("interest_rate") @db.Decimal(5, 2)
+  totalInstallments      Int      @map("total_installments")
+  startDate              DateTime @map("start_date") @db.Date
+  createdAt              DateTime @default(now()) @map("created_at")
+
+  installments LoanInstallment[]
+
+  @@map("loans")
+}
+
+// ─────────────────────────────────────────
+// 13. LOAN INSTALLMENTS (Cuotas crédito)
+// ─────────────────────────────────────────
+
+model LoanInstallment {
+  id                         String            @id @default(uuid())
+  loanId                     String            @map("loan_id")
+  installmentNumber          Int               @map("installment_number")
+  capitalAmount              Decimal           @map("capital_amount") @db.Decimal(14, 2)
+  interestAmount             Decimal           @map("interest_amount") @db.Decimal(14, 2)
+  currency                   Currency
+  exchangeRateAtCreation     Decimal           @map("exchange_rate_at_creation") @db.Decimal(14, 6)
+  baseCurrencyCapitalAmount  Decimal           @map("base_currency_capital_amount") @db.Decimal(14, 2)
+  baseCurrencyInterestAmount Decimal           @map("base_currency_interest_amount") @db.Decimal(14, 2)
+  baseCurrencyAmount         Decimal           @map("base_currency_amount") @db.Decimal(14, 2)
+  dueDate                    DateTime          @map("due_date") @db.Date
+  status                     InstallmentStatus
+financialMovementId        String?  @unique @map("financial_movement_id")
+createdAt                  DateTime @default(now()) @map("created_at")
+
+loan              Loan               @relation(fields: [loanId], references: [id])
+financialMovement FinancialMovement? @relation(fields: [financialMovementId], references: [id])
+
+  @@index([dueDate])
+  @@index([loanId])
+  @@map("loan_installments")
+}
+
+// ─────────────────────────────────────────
+// 14. MARKET PRICES
+// ─────────────────────────────────────────
+
+model MarketPrice {
+  id        String            @id @default(uuid())
+  type      MarketPriceType
+  product   String
+  price     Decimal           @db.Decimal(14, 4)
+  currency  Currency
+  date      DateTime          @db.Date
+  source    MarketPriceSource
+  active    Boolean           @default(false)
+  createdAt DateTime          @default(now()) @map("created_at")
+
+  @@index([product, active])
+  @@map("market_prices")
+}
+
+// ─────────────────────────────────────────
+// 15. AUDIT LOG
+// ─────────────────────────────────────────
+
+model AuditLog {
+  id              String      @id @default(uuid())
+  entityType      String      @map("entity_type")
+  entityId        String      @map("entity_id")
+  action          AuditAction
+  changedByUserId String      @map("changed_by_user_id")
+  createdAt       DateTime    @default(now()) @map("created_at")
+
+  changedBy User @relation(fields: [changedByUserId], references: [id])
+
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
