@@ -4,3 +4,7 @@ export declare class CreateUserDto {
     password: string;
     role?: Role;
 }
+export declare class LoginDto {
+    email: string;
+    password: string;
+}

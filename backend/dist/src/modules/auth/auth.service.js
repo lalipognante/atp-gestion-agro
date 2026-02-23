@@ -44,13 +44,16 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
+const jwt_1 = require("@nestjs/jwt");
 const auth_repository_1 = require("./auth.repository");
 const bcrypt = __importStar(require("bcrypt"));
 const client_1 = require("@prisma/client");
 let AuthService = class AuthService {
     authRepository;
-    constructor(authRepository) {
+    jwtService;
+    constructor(authRepository, jwtService) {
         this.authRepository = authRepository;
+        this.jwtService = jwtService;
     }
     async register(dto) {
         const existingUser = await this.authRepository.findByEmail(dto.email);
@@ -58,7 +61,7 @@ let AuthService = class AuthService {
             throw new common_1.ConflictException('Email already registered');
         }
         const passwordHash = await bcrypt.hash(dto.password, 10);
-        const role = dto.role ?? client_1.Role.ADMIN;
+        const role = (dto.role ?? client_1.Role.ADMIN);
         const user = await this.authRepository.create({
             email: dto.email,
             passwordHash,
@@ -71,10 +74,28 @@ let AuthService = class AuthService {
             createdAt: user.createdAt,
         };
     }
+    async login(dto) {
+        const user = await this.authRepository.findByEmail(dto.email);
+        if (!user) {
+            throw new common_1.UnauthorizedException('Invalid credentials');
+        }
+        const isValid = await bcrypt.compare(dto.password, user.passwordHash);
+        if (!isValid) {
+            throw new common_1.UnauthorizedException('Invalid credentials');
+        }
+        const payload = {
+            sub: user.id,
+            role: user.role,
+        };
+        return {
+            access_token: this.jwtService.sign(payload),
+        };
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [auth_repository_1.AuthRepository])
+    __metadata("design:paramtypes", [auth_repository_1.AuthRepository,
+        jwt_1.JwtService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

@@ -1,5 +1,5 @@
 import { AuthService } from './auth.service';
-import { CreateUserDto } from './dto/auth.dto';
+import { CreateUserDto, LoginDto } from './dto/auth.dto';
 export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
@@ -9,4 +9,8 @@ export declare class AuthController {
         role: import(".prisma/client").$Enums.Role;
         createdAt: Date;
     }>;
+    login(dto: LoginDto): Promise<{
+        access_token: string;
+    }>;
+    me(req: any): any;
 }

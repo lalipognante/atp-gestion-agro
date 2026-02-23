@@ -13,3 +13,11 @@ export class CreateUserDto {
   @IsEnum(Role)
   role?: Role;
 }
+
+export class LoginDto {
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  password: string;
+}
