@@ -8,28 +8,49 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FieldsController = void 0;
 const common_1 = require("@nestjs/common");
+const fields_service_1 = require("./fields.service");
+const create_field_dto_1 = require("./dto/create-field.dto");
 const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
 const roles_guard_1 = require("../auth/roles.guard");
 const roles_decorator_1 = require("../auth/roles.decorator");
 const client_1 = require("@prisma/client");
 let FieldsController = class FieldsController {
+    fieldsService;
+    constructor(fieldsService) {
+        this.fieldsService = fieldsService;
+    }
+    create(dto) {
+        return this.fieldsService.create(dto);
+    }
     findAll() {
-        return 'Only ADMIN can see this';
+        return this.fieldsService.findAll();
     }
 };
 exports.FieldsController = FieldsController;
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, common_1.Post)(),
     (0, roles_decorator_1.Roles)(client_1.Role.ADMIN),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [create_field_dto_1.CreateFieldDto]),
+    __metadata("design:returntype", void 0)
+], FieldsController.prototype, "create", null);
+__decorate([
     (0, common_1.Get)(),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.VIEWER),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], FieldsController.prototype, "findAll", null);
 exports.FieldsController = FieldsController = __decorate([
-    (0, common_1.Controller)('fields')
+    (0, common_1.Controller)('fields'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    __metadata("design:paramtypes", [fields_service_1.FieldsService])
 ], FieldsController);
 //# sourceMappingURL=fields.controller.js.map

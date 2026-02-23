@@ -1,8 +1,8 @@
-import { FieldsService } from './fields.service';
+import { FieldsRepository } from './fields.repository';
 import { CreateFieldDto } from './dto/create-field.dto';
-export declare class FieldsController {
-    private readonly fieldsService;
-    constructor(fieldsService: FieldsService);
+export declare class FieldsService {
+    private readonly fieldsRepository;
+    constructor(fieldsRepository: FieldsRepository);
     create(dto: CreateFieldDto): Promise<{
         id: string;
         name: string;
