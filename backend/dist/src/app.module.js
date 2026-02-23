@@ -14,10 +14,6 @@ const fields_module_1 = require("./modules/fields/fields.module");
 const lots_module_1 = require("./modules/lots/lots.module");
 const stock_module_1 = require("./modules/stock/stock.module");
 const financial_module_1 = require("./modules/financial/financial.module");
-const loans_module_1 = require("./modules/loans/loans.module");
-const obligations_module_1 = require("./modules/obligations/obligations.module");
-const pricing_module_1 = require("./modules/pricing/pricing.module");
-const campaigns_module_1 = require("./modules/campaigns/campaigns.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -27,13 +23,9 @@ exports.AppModule = AppModule = __decorate([
             prisma_module_1.PrismaModule,
             auth_module_1.AuthModule,
             fields_module_1.FieldsModule,
-            campaigns_module_1.CampaignsModule,
             lots_module_1.LotsModule,
             stock_module_1.StockModule,
             financial_module_1.FinancialModule,
-            loans_module_1.LoansModule,
-            obligations_module_1.ObligationsModule,
-            pricing_module_1.PricingModule,
         ],
     })
 ], AppModule);

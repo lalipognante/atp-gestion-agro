@@ -10,8 +10,8 @@ export declare class CampaignsRepository {
         id: string;
         createdAt: Date;
         year: number;
-        crop: string;
         lotId: string;
+        crop: string;
     }>;
     findAll(): Promise<({
         lot: {
@@ -32,8 +32,8 @@ export declare class CampaignsRepository {
         id: string;
         createdAt: Date;
         year: number;
-        crop: string;
         lotId: string;
+        crop: string;
     })[]>;
     lotExists(lotId: string): Promise<{
         id: string;
