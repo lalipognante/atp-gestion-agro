@@ -5,14 +5,14 @@ export declare class FieldsService {
     constructor(fieldsRepository: FieldsRepository);
     create(dto: CreateFieldDto): Promise<{
         id: string;
+        createdAt: Date;
         name: string;
         type: import(".prisma/client").$Enums.FieldType;
-        createdAt: Date;
     }>;
     findAll(): Promise<{
         id: string;
+        createdAt: Date;
         name: string;
         type: import(".prisma/client").$Enums.FieldType;
-        createdAt: Date;
     }[]>;
 }

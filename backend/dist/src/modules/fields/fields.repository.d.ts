@@ -8,14 +8,14 @@ export declare class FieldsRepository {
         type: FieldType;
     }): Promise<{
         id: string;
+        createdAt: Date;
         name: string;
         type: import(".prisma/client").$Enums.FieldType;
-        createdAt: Date;
     }>;
     findAll(): Promise<{
         id: string;
+        createdAt: Date;
         name: string;
         type: import(".prisma/client").$Enums.FieldType;
-        createdAt: Date;
     }[]>;
 }

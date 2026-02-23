@@ -6,18 +6,18 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LotsModule = void 0;
+exports.CampaignsModule = void 0;
 const common_1 = require("@nestjs/common");
-const lots_service_1 = require("./lots.service");
-const lots_repository_1 = require("./lots.repository");
-const lots_controller_1 = require("./lots.controller");
-let LotsModule = class LotsModule {
+const campaigns_service_1 = require("./campaigns.service");
+const campaigns_repository_1 = require("./campaigns.repository");
+const campaigns_controller_1 = require("./campaigns.controller");
+let CampaignsModule = class CampaignsModule {
 };
-exports.LotsModule = LotsModule;
-exports.LotsModule = LotsModule = __decorate([
+exports.CampaignsModule = CampaignsModule;
+exports.CampaignsModule = CampaignsModule = __decorate([
     (0, common_1.Module)({
-        controllers: [lots_controller_1.LotsController],
-        providers: [lots_service_1.LotsService, lots_repository_1.LotsRepository],
+        controllers: [campaigns_controller_1.CampaignsController],
+        providers: [campaigns_service_1.CampaignsService, campaigns_repository_1.CampaignsRepository],
     })
-], LotsModule);
-//# sourceMappingURL=lots.module.js.map
+], CampaignsModule);
+//# sourceMappingURL=campaigns.module.js.map
