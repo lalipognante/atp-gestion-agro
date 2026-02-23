@@ -26,6 +26,7 @@ export class StockService {
     const currentStock = summary.netStock;
     const qty = Number(dto.quantity);
 
+    // 🔒 Validación stock negativo
     if (
       dto.movementType === 'SALE' ||
       dto.movementType === 'INTERNAL_CONSUMPTION'
@@ -40,11 +41,11 @@ export class StockService {
     // 1️⃣ Crear stock movement
     const stockMovement = await this.stockRepository.create(dto);
 
-    // 2️⃣ Si es venta → crear movimiento financiero
-    if (dto.movementType === 'SALE') {
+    // 2️⃣ Crear movimiento financiero si aplica
+    if (dto.movementType === 'SALE' || dto.movementType === 'PURCHASE') {
       if (!dto.pricePerUnit) {
         throw new BadRequestException(
-          'pricePerUnit required for SALE'
+          'pricePerUnit required for SALE or PURCHASE'
         );
       }
 
@@ -52,8 +53,11 @@ export class StockService {
 
       await this.prisma.financialMovement.create({
         data: {
-          direction: FinancialDirection.INCOME,
-          category: 'STOCK_SALE',
+          direction:
+            dto.movementType === 'SALE'
+              ? FinancialDirection.INCOME
+              : FinancialDirection.EXPENSE,
+          category: 'STOCK_' + dto.movementType,
           amount,
           currency: Currency.ARS,
           exchangeRateAtCreation: 1,

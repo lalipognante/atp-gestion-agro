@@ -1,7 +1,9 @@
 import { FinancialRepository } from './financial.repository';
+import { PrismaService } from '../../prisma/prisma.service';
 export declare class FinancialService {
     private readonly repo;
-    constructor(repo: FinancialRepository);
+    private readonly prisma;
+    constructor(repo: FinancialRepository, prisma: PrismaService);
     findAll(): Promise<{
         id: string;
         createdAt: Date;
@@ -14,4 +16,9 @@ export declare class FinancialService {
         relatedType: string | null;
         relatedId: string | null;
     }[]>;
+    getBalanceByCampaign(campaignId: string): Promise<{
+        income: number;
+        expense: number;
+        balance: number;
+    }>;
 }

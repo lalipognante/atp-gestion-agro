@@ -36,15 +36,17 @@ let StockService = class StockService {
             }
         }
         const stockMovement = await this.stockRepository.create(dto);
-        if (dto.movementType === 'SALE') {
+        if (dto.movementType === 'SALE' || dto.movementType === 'PURCHASE') {
             if (!dto.pricePerUnit) {
-                throw new common_1.BadRequestException('pricePerUnit required for SALE');
+                throw new common_1.BadRequestException('pricePerUnit required for SALE or PURCHASE');
             }
             const amount = qty * dto.pricePerUnit;
             await this.prisma.financialMovement.create({
                 data: {
-                    direction: client_1.FinancialDirection.INCOME,
-                    category: 'STOCK_SALE',
+                    direction: dto.movementType === 'SALE'
+                        ? client_1.FinancialDirection.INCOME
+                        : client_1.FinancialDirection.EXPENSE,
+                    category: 'STOCK_' + dto.movementType,
                     amount,
                     currency: client_1.Currency.ARS,
                     exchangeRateAtCreation: 1,

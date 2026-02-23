@@ -8,6 +8,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FinancialController = void 0;
 const common_1 = require("@nestjs/common");
@@ -24,6 +27,9 @@ let FinancialController = class FinancialController {
     findAll() {
         return this.service.findAll();
     }
+    getBalance(campaignId) {
+        return this.service.getBalanceByCampaign(campaignId);
+    }
 };
 exports.FinancialController = FinancialController;
 __decorate([
@@ -33,6 +39,14 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], FinancialController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)('balance/:campaignId'),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN),
+    __param(0, (0, common_1.Param)('campaignId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], FinancialController.prototype, "getBalance", null);
 exports.FinancialController = FinancialController = __decorate([
     (0, common_1.Controller)('financial'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),

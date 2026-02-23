@@ -12,18 +12,45 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.FinancialService = void 0;
 const common_1 = require("@nestjs/common");
 const financial_repository_1 = require("./financial.repository");
+const prisma_service_1 = require("../../prisma/prisma.service");
+const client_1 = require("@prisma/client");
 let FinancialService = class FinancialService {
     repo;
-    constructor(repo) {
+    prisma;
+    constructor(repo, prisma) {
         this.repo = repo;
+        this.prisma = prisma;
     }
     async findAll() {
         return this.repo.findAll();
+    }
+    async getBalanceByCampaign(campaignId) {
+        const movements = await this.prisma.financialMovement.findMany({
+            where: {
+                relatedType: 'STOCK_MOVEMENT',
+            },
+        });
+        let income = 0;
+        let expense = 0;
+        for (const m of movements) {
+            if (m.direction === client_1.FinancialDirection.INCOME) {
+                income += Number(m.amount);
+            }
+            if (m.direction === client_1.FinancialDirection.EXPENSE) {
+                expense += Number(m.amount);
+            }
+        }
+        return {
+            income,
+            expense,
+            balance: income - expense,
+        };
     }
 };
 exports.FinancialService = FinancialService;
 exports.FinancialService = FinancialService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [financial_repository_1.FinancialRepository])
+    __metadata("design:paramtypes", [financial_repository_1.FinancialRepository,
+        prisma_service_1.PrismaService])
 ], FinancialService);
 //# sourceMappingURL=financial.service.js.map

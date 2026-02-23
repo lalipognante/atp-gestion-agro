@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, UseGuards, Param } from '@nestjs/common';
 import { FinancialService } from './financial.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -14,5 +14,11 @@ export class FinancialController {
   @Roles(Role.ADMIN)
   findAll() {
     return this.service.findAll();
+  }
+
+  @Get('balance/:campaignId')
+  @Roles(Role.ADMIN)
+  getBalance(@Param('campaignId') campaignId: string) {
+    return this.service.getBalanceByCampaign(campaignId);
   }
 }

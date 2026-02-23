@@ -14,4 +14,9 @@ export declare class FinancialController {
         relatedType: string | null;
         relatedId: string | null;
     }[]>;
+    getBalance(campaignId: string): Promise<{
+        income: number;
+        expense: number;
+        balance: number;
+    }>;
 }
