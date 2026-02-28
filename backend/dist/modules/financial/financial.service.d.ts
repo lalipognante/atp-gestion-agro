@@ -7,6 +7,7 @@ export declare class FinancialService {
     findAll(): Promise<{
         id: string;
         createdAt: Date;
+        campaignId: string | null;
         direction: import(".prisma/client").$Enums.FinancialDirection;
         category: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;

@@ -1,6 +1,6 @@
 import { getToken } from "@/lib/utils";
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = "/api";
 
 export class ApiError extends Error {
   constructor(
