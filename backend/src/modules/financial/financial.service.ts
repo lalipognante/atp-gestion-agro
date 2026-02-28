@@ -17,7 +17,7 @@ export class FinancialService {
   async getBalanceByCampaign(campaignId: string) {
     const movements = await this.prisma.financialMovement.findMany({
       where: {
-        relatedType: 'STOCK_MOVEMENT',
+        
       },
     });
 

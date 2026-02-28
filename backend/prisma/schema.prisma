@@ -7,9 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ─────────────────────────────────────────
-// ENUMS
-// ─────────────────────────────────────────
+// ───────────────── ENUMS ─────────────────
 
 enum Role {
   ADMIN
@@ -77,9 +75,7 @@ enum AuditAction {
   DELETE
 }
 
-// ─────────────────────────────────────────
-// 1. USERS
-// ─────────────────────────────────────────
+// ───────────────── USERS ─────────────────
 
 model User {
   id           String   @id @default(uuid())
@@ -94,9 +90,7 @@ model User {
   @@map("users")
 }
 
-// ─────────────────────────────────────────
-// 2. FIELDS
-// ─────────────────────────────────────────
+// ───────────────── FIELDS ─────────────────
 
 model Field {
   id        String    @id @default(uuid())
@@ -109,9 +103,7 @@ model Field {
   @@map("fields")
 }
 
-// ─────────────────────────────────────────
-// 3. LOTS
-// ─────────────────────────────────────────
+// ───────────────── LOTS ─────────────────
 
 model Lot {
   id        String   @id @default(uuid())
@@ -127,9 +119,7 @@ model Lot {
   @@map("lots")
 }
 
-// ─────────────────────────────────────────
-// 4. CAMPAIGNS
-// ─────────────────────────────────────────
+// ───────────────── CAMPAIGNS ─────────────────
 
 model Campaign {
   id        String   @id @default(uuid())
@@ -138,15 +128,14 @@ model Campaign {
   crop      String
   createdAt DateTime @default(now()) @map("created_at")
 
-  lot            Lot             @relation(fields: [lotId], references: [id])
-  stockMovements StockMovement[]
+  lot                Lot               @relation(fields: [lotId], references: [id])
+  stockMovements     StockMovement[]
+  financialMovements FinancialMovement[]
 
   @@map("campaigns")
 }
 
-// ─────────────────────────────────────────
-// 5. STOCK MOVEMENTS (Granos)
-// ─────────────────────────────────────────
+// ───────────────── STOCK MOVEMENTS ─────────────────
 
 model StockMovement {
   id           String            @id @default(uuid())
@@ -158,122 +147,41 @@ model StockMovement {
   campaignId   String?           @map("campaign_id")
   createdAt    DateTime          @default(now()) @map("created_at")
 
-  lot      Lot?      @relation(fields: [lotId], references: [id])
-  campaign Campaign? @relation(fields: [campaignId], references: [id])
+  lot                Lot?               @relation(fields: [lotId], references: [id])
+  campaign           Campaign?          @relation(fields: [campaignId], references: [id])
+  financialMovements FinancialMovement[]
 
   @@index([product])
   @@map("stock_movements")
 }
 
-// ─────────────────────────────────────────
-// 6. LIVESTOCK MOVEMENTS (Hacienda)
-// ─────────────────────────────────────────
-
-model LivestockMovement {
-  id           String                @id @default(uuid())
-  category     String
-  movementType LivestockMovementType @map("movement_type")
-  quantity     Int
-  createdAt    DateTime              @default(now()) @map("created_at")
-
-  @@index([category])
-  @@map("livestock_movements")
-}
-
-// ─────────────────────────────────────────
-// 7. INPUT MOVEMENTS (Insumos)
-// ─────────────────────────────────────────
-
-model InputMovement {
-  id           String            @id @default(uuid())
-  product      String
-  movementType InputMovementType @map("movement_type")
-  quantity     Decimal           @db.Decimal(14, 2)
-  unit         String
-  createdAt    DateTime          @default(now()) @map("created_at")
-
-  @@map("input_movements")
-}
-
-// ─────────────────────────────────────────
-// 8. SUPPLIERS (Proveedores)
-// ─────────────────────────────────────────
-
-model Supplier {
-  id          String   @id @default(uuid())
-  name        String
-  contactInfo String?  @map("contact_info")
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  paymentPlans PaymentPlan[]
-
-  @@map("suppliers")
-}
-
-// ─────────────────────────────────────────
-// 9. PAYMENT PLAN
-// ─────────────────────────────────────────
-
-model PaymentPlan {
-  id                String   @id @default(uuid())
-  supplierId        String?  @map("supplier_id")
-  relatedType       String?  @map("related_type")
-  relatedId         String?  @map("related_id")
-  totalInstallments Int      @map("total_installments")
-  createdAt         DateTime @default(now()) @map("created_at")
-
-  supplier     Supplier?              @relation(fields: [supplierId], references: [id])
-  installments ObligationInstallment[]
-
-  @@map("payment_plans")
-}
-
-// ─────────────────────────────────────────
-// 10. OBLIGATION INSTALLMENTS (Cuotas comerciales)
-// ─────────────────────────────────────────
-
-model ObligationInstallment {
-  id                     String            @id @default(uuid())
-  paymentPlanId          String            @map("payment_plan_id")
-  installmentNumber      Int               @map("installment_number")
-  amount                 Decimal           @db.Decimal(14, 2)
-  currency               Currency
-  exchangeRateAtCreation Decimal           @map("exchange_rate_at_creation") @db.Decimal(14, 6)
-  baseCurrencyAmount     Decimal           @map("base_currency_amount") @db.Decimal(14, 2)
-  dueDate                DateTime          @map("due_date") @db.Date
-  status                 InstallmentStatus
-  createdAt              DateTime          @default(now()) @map("created_at")
-
-  paymentPlan PaymentPlan @relation(fields: [paymentPlanId], references: [id])
-
-  @@index([dueDate])
-  @@map("obligation_installments")
-}
-
-// ─────────────────────────────────────────
-// 11. FINANCIAL MOVEMENTS (Ledger)
-// ─────────────────────────────────────────
+// ───────────────── FINANCIAL MOVEMENTS ─────────────────
 
 model FinancialMovement {
-  id                     String             @id @default(uuid())
+  id                     String   @id @default(uuid())
   direction              FinancialDirection
   category               String?
-  amount                 Decimal            @db.Decimal(14, 2)
+  amount                 Decimal  @db.Decimal(14, 2)
   currency               Currency
-  exchangeRateAtCreation Decimal            @map("exchange_rate_at_creation") @db.Decimal(14, 6)
-  baseCurrencyAmount     Decimal            @map("base_currency_amount") @db.Decimal(14, 2)
-  relatedType            String?            @map("related_type")
-  relatedId              String?            @map("related_id")
-  createdAt              DateTime           @default(now()) @map("created_at")
+  exchangeRateAtCreation Decimal  @map("exchange_rate_at_creation") @db.Decimal(14, 6)
+  baseCurrencyAmount     Decimal  @map("base_currency_amount") @db.Decimal(14, 2)
+
+  stockMovementId String? @map("stock_movement_id")
+  stockMovement   StockMovement? @relation(fields: [stockMovementId], references: [id])
+
+  campaignId String? @map("campaign_id")
+  campaign   Campaign? @relation(fields: [campaignId], references: [id])
 
   loanInstallment LoanInstallment?
 
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([stockMovementId])
+  @@index([campaignId])
   @@map("financial_movements")
 }
 
-// ─────────────────────────────────────────
-// 12. LOANS (Créditos Bancarios)
-// ─────────────────────────────────────────
+// ───────────────── LOANS ─────────────────
 
 model Loan {
   id                     String   @id @default(uuid())
@@ -292,9 +200,7 @@ model Loan {
   @@map("loans")
 }
 
-// ─────────────────────────────────────────
-// 13. LOAN INSTALLMENTS (Cuotas crédito)
-// ─────────────────────────────────────────
+// ───────────────── LOAN INSTALLMENTS ─────────────────
 
 model LoanInstallment {
   id                         String            @id @default(uuid())
@@ -309,39 +215,19 @@ model LoanInstallment {
   baseCurrencyAmount         Decimal           @map("base_currency_amount") @db.Decimal(14, 2)
   dueDate                    DateTime          @map("due_date") @db.Date
   status                     InstallmentStatus
-financialMovementId        String?  @unique @map("financial_movement_id")
-createdAt                  DateTime @default(now()) @map("created_at")
 
-loan              Loan               @relation(fields: [loanId], references: [id])
-financialMovement FinancialMovement? @relation(fields: [financialMovementId], references: [id])
+  financialMovementId String? @unique @map("financial_movement_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  loan              Loan               @relation(fields: [loanId], references: [id])
+  financialMovement FinancialMovement? @relation(fields: [financialMovementId], references: [id])
 
   @@index([dueDate])
   @@index([loanId])
   @@map("loan_installments")
 }
 
-// ─────────────────────────────────────────
-// 14. MARKET PRICES
-// ─────────────────────────────────────────
-
-model MarketPrice {
-  id        String            @id @default(uuid())
-  type      MarketPriceType
-  product   String
-  price     Decimal           @db.Decimal(14, 4)
-  currency  Currency
-  date      DateTime          @db.Date
-  source    MarketPriceSource
-  active    Boolean           @default(false)
-  createdAt DateTime          @default(now()) @map("created_at")
-
-  @@index([product, active])
-  @@map("market_prices")
-}
-
-// ─────────────────────────────────────────
-// 15. AUDIT LOG
-// ─────────────────────────────────────────
+// ───────────────── AUDIT LOG ─────────────────
 
 model AuditLog {
   id              String      @id @default(uuid())

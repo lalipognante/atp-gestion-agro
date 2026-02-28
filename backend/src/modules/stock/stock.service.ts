@@ -62,8 +62,8 @@ export class StockService {
           currency: Currency.ARS,
           exchangeRateAtCreation: 1,
           baseCurrencyAmount: amount,
-          relatedType: 'STOCK_MOVEMENT',
-          relatedId: stockMovement.id,
+          
+          stockMovementId: stockMovement.id,
         },
       });
     }
