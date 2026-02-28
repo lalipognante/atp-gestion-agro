@@ -13,8 +13,8 @@ export class DashboardService {
 
   async getSummary() {
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const startOfNextMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
 
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const in7Days = new Date(today);
@@ -29,8 +29,6 @@ export class DashboardService {
       urgentObligations,
       upcomingObligations,
       recentFinancial,
-      recentLivestock,
-      recentStock,
     ] = await Promise.all([
       this.prisma.stockMovement.findMany(),
       this.prisma.livestockMovement.findMany(),
@@ -52,14 +50,6 @@ export class DashboardService {
         orderBy: { dueDate: 'asc' },
       }),
       this.prisma.financialMovement.findMany({
-        orderBy: { createdAt: 'desc' },
-        take: 10,
-      }),
-      this.prisma.livestockMovement.findMany({
-        orderBy: { date: 'desc' },
-        take: 10,
-      }),
-      this.prisma.stockMovement.findMany({
         orderBy: { createdAt: 'desc' },
         take: 10,
       }),
@@ -117,6 +107,13 @@ export class DashboardService {
     }
 
     // ── Last 10 combined movements ────────────────────────────────────────
+    const recentLivestock = [...allLivestock]
+      .sort((a, b) => b.date.getTime() - a.date.getTime())
+      .slice(0, 10);
+    const recentStock = [...allStock]
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(0, 10);
+
     const combined = [
       ...recentFinancial.map((m) => ({
         id: m.id,

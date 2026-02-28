@@ -24,17 +24,17 @@ export class ObligationsService {
   }
 
   async pay(id: string) {
-    const obligation = await this.repo.findById(id);
-
-    if (!obligation) {
-      throw new NotFoundException('Obligation not found');
-    }
-
-    if (obligation.status === ObligationStatus.PAID) {
-      throw new BadRequestException('Obligation is already paid');
-    }
-
     return this.prisma.$transaction(async (tx) => {
+      const obligation = await tx.obligation.findUnique({ where: { id } });
+
+      if (!obligation) {
+        throw new NotFoundException('Obligation not found');
+      }
+
+      if (obligation.status === ObligationStatus.PAID) {
+        throw new BadRequestException('Obligation is already paid');
+      }
+
       const financialMovement = await tx.financialMovement.create({
         data: {
           direction: FinancialDirection.EXPENSE,

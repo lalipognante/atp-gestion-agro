@@ -55,7 +55,7 @@ export class HaciendaService {
 
     for (const m of movements) {
       const qty = m.quantity;
-      const cat = m.category as string;
+      const cat = m.category;
 
       if (m.type === LivestockMovementType.INCOME) {
         totalHeads += qty;
