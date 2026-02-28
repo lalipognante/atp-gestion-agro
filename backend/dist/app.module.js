@@ -16,6 +16,7 @@ const stock_module_1 = require("./modules/stock/stock.module");
 const financial_module_1 = require("./modules/financial/financial.module");
 const obligations_module_1 = require("./modules/obligations/obligations.module");
 const hacienda_module_1 = require("./modules/hacienda/hacienda.module");
+const dashboard_module_1 = require("./modules/dashboard/dashboard.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -30,6 +31,7 @@ exports.AppModule = AppModule = __decorate([
             financial_module_1.FinancialModule,
             obligations_module_1.ObligationsModule,
             hacienda_module_1.HaciendaModule,
+            dashboard_module_1.DashboardModule,
         ],
     })
 ], AppModule);

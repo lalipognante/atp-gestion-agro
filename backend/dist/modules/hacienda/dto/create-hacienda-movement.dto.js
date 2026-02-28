@@ -35,7 +35,6 @@ __decorate([
 ], CreateHaciendaMovementDto.prototype, "type", void 0);
 __decorate([
     (0, class_validator_1.IsInt)(),
-    (0, class_validator_1.IsPositive)(),
     __metadata("design:type", Number)
 ], CreateHaciendaMovementDto.prototype, "quantity", void 0);
 __decorate([

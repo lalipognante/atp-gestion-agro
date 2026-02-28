@@ -68,6 +68,10 @@ let HaciendaService = class HaciendaService {
                 totalHeads -= qty;
                 byCategory[cat] = (byCategory[cat] ?? 0) - qty;
             }
+            else if (m.type === client_1.LivestockMovementType.ADJUSTMENT) {
+                totalHeads += qty;
+                byCategory[cat] = (byCategory[cat] ?? 0) + qty;
+            }
             if (m.type === client_1.LivestockMovementType.SALE && m.totalPrice != null) {
                 totalCattleSaleIncome += Number(m.totalPrice);
             }
