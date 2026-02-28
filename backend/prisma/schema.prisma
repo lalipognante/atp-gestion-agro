@@ -36,10 +36,11 @@ enum LivestockMovementType {
   ADJUSTMENT
 }
 
-enum InputMovementType {
-  PURCHASE
-  USAGE
-  ADJUSTMENT
+enum LivestockCategory {
+  TERNEROS
+  NOVILLOS
+  VACAS
+  TOROS
 }
 
 enum Currency {
@@ -47,32 +48,21 @@ enum Currency {
   USD
 }
 
-enum InstallmentStatus {
-  PENDING
-  PAID
-  PARTIAL
-}
-
 enum FinancialDirection {
   INCOME
   EXPENSE
 }
 
-enum MarketPriceType {
-  GRAIN
-  CATTLE
-  USD
+enum ObligationType {
+  RENT
+  CREDIT
+  SUPPLIER
+  OTHER
 }
 
-enum MarketPriceSource {
-  MANUAL
-  API
-}
-
-enum AuditAction {
-  CREATE
-  UPDATE
-  DELETE
+enum ObligationStatus {
+  PENDING
+  PAID
 }
 
 // ───────────────── USERS ─────────────────
@@ -84,8 +74,6 @@ model User {
   role         Role
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
-
-  auditLogs AuditLog[]
 
   @@map("users")
 }
@@ -128,7 +116,7 @@ model Campaign {
   crop      String
   createdAt DateTime @default(now()) @map("created_at")
 
-  lot                Lot               @relation(fields: [lotId], references: [id])
+  lot                Lot                 @relation(fields: [lotId], references: [id])
   stockMovements     StockMovement[]
   financialMovements FinancialMovement[]
 
@@ -147,8 +135,8 @@ model StockMovement {
   campaignId   String?           @map("campaign_id")
   createdAt    DateTime          @default(now()) @map("created_at")
 
-  lot                Lot?               @relation(fields: [lotId], references: [id])
-  campaign           Campaign?          @relation(fields: [campaignId], references: [id])
+  lot                Lot?                @relation(fields: [lotId], references: [id])
+  campaign           Campaign?           @relation(fields: [campaignId], references: [id])
   financialMovements FinancialMovement[]
 
   @@index([product])
@@ -158,21 +146,19 @@ model StockMovement {
 // ───────────────── FINANCIAL MOVEMENTS ─────────────────
 
 model FinancialMovement {
-  id                     String   @id @default(uuid())
+  id                     String             @id @default(uuid())
   direction              FinancialDirection
   category               String?
-  amount                 Decimal  @db.Decimal(14, 2)
+  amount                 Decimal            @db.Decimal(14, 2)
   currency               Currency
-  exchangeRateAtCreation Decimal  @map("exchange_rate_at_creation") @db.Decimal(14, 6)
-  baseCurrencyAmount     Decimal  @map("base_currency_amount") @db.Decimal(14, 2)
+  exchangeRateAtCreation Decimal            @map("exchange_rate_at_creation") @db.Decimal(14, 6)
+  baseCurrencyAmount     Decimal            @map("base_currency_amount") @db.Decimal(14, 2)
 
-  stockMovementId String? @map("stock_movement_id")
+  stockMovementId String?        @map("stock_movement_id")
   stockMovement   StockMovement? @relation(fields: [stockMovementId], references: [id])
 
-  campaignId String? @map("campaign_id")
+  campaignId String?   @map("campaign_id")
   campaign   Campaign? @relation(fields: [campaignId], references: [id])
-
-  loanInstallment LoanInstallment?
 
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -181,64 +167,32 @@ model FinancialMovement {
   @@map("financial_movements")
 }
 
-// ───────────────── LOANS ─────────────────
+// ───────────────── LIVESTOCK MOVEMENTS ─────────────────
 
-model Loan {
-  id                     String   @id @default(uuid())
-  bank                   String
-  principalAmount        Decimal  @map("principal_amount") @db.Decimal(14, 2)
-  currency               Currency
-  exchangeRateAtCreation Decimal  @map("exchange_rate_at_creation") @db.Decimal(14, 6)
-  baseCurrencyAmount     Decimal  @map("base_currency_amount") @db.Decimal(14, 2)
-  interestRate           Decimal  @map("interest_rate") @db.Decimal(5, 2)
-  totalInstallments      Int      @map("total_installments")
-  startDate              DateTime @map("start_date") @db.Date
-  createdAt              DateTime @default(now()) @map("created_at")
+model LivestockMovement {
+  id         String                @id @default(uuid())
+  date       DateTime              @db.Date
+  category   LivestockCategory
+  type       LivestockMovementType
+  quantity   Int
+  totalPrice Decimal?              @map("total_price") @db.Decimal(14, 2)
+  notes      String?
+  createdAt  DateTime              @default(now()) @map("created_at")
 
-  installments LoanInstallment[]
-
-  @@map("loans")
+  @@map("livestock_movements")
 }
 
-// ───────────────── LOAN INSTALLMENTS ─────────────────
+// ───────────────── OBLIGATIONS ─────────────────
 
-model LoanInstallment {
-  id                         String            @id @default(uuid())
-  loanId                     String            @map("loan_id")
-  installmentNumber          Int               @map("installment_number")
-  capitalAmount              Decimal           @map("capital_amount") @db.Decimal(14, 2)
-  interestAmount             Decimal           @map("interest_amount") @db.Decimal(14, 2)
-  currency                   Currency
-  exchangeRateAtCreation     Decimal           @map("exchange_rate_at_creation") @db.Decimal(14, 6)
-  baseCurrencyCapitalAmount  Decimal           @map("base_currency_capital_amount") @db.Decimal(14, 2)
-  baseCurrencyInterestAmount Decimal           @map("base_currency_interest_amount") @db.Decimal(14, 2)
-  baseCurrencyAmount         Decimal           @map("base_currency_amount") @db.Decimal(14, 2)
-  dueDate                    DateTime          @map("due_date") @db.Date
-  status                     InstallmentStatus
+model Obligation {
+  id                  String           @id @default(uuid())
+  concept             String
+  amount              Decimal          @db.Decimal(14, 2)
+  dueDate             DateTime         @map("due_date") @db.Date
+  type                ObligationType
+  status              ObligationStatus
+  financialMovementId String?          @map("financial_movement_id")
+  createdAt           DateTime         @default(now()) @map("created_at")
 
-  financialMovementId String? @unique @map("financial_movement_id")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  loan              Loan               @relation(fields: [loanId], references: [id])
-  financialMovement FinancialMovement? @relation(fields: [financialMovementId], references: [id])
-
-  @@index([dueDate])
-  @@index([loanId])
-  @@map("loan_installments")
-}
-
-// ───────────────── AUDIT LOG ─────────────────
-
-model AuditLog {
-  id              String      @id @default(uuid())
-  entityType      String      @map("entity_type")
-  entityId        String      @map("entity_id")
-  action          AuditAction
-  changedByUserId String      @map("changed_by_user_id")
-  createdAt       DateTime    @default(now()) @map("created_at")
-
-  changedBy User @relation(fields: [changedByUserId], references: [id])
-
-  @@index([entityType, entityId])
-  @@map("audit_logs")
+  @@map("obligations")
 }

@@ -5,6 +5,8 @@ import { FieldsModule } from './modules/fields/fields.module';
 import { LotsModule } from './modules/lots/lots.module';
 import { StockModule } from './modules/stock/stock.module';
 import { FinancialModule } from './modules/financial/financial.module';
+import { ObligationsModule } from './modules/obligations/obligations.module';
+import { HaciendaModule } from './modules/hacienda/hacienda.module';
 
 @Module({
   imports: [
@@ -14,6 +16,8 @@ import { FinancialModule } from './modules/financial/financial.module';
     LotsModule,
     StockModule,
     FinancialModule,
+    ObligationsModule,
+    HaciendaModule,
   ],
 })
 export class AppModule {}
