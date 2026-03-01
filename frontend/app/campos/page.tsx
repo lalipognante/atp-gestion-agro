@@ -1,9 +1,11 @@
-import { getLots } from "@/services/fields";
+import { getFields, getLots } from "@/services/fields";
 import { Header } from "@/components/layout/Header";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { DataTable, type TableColumn } from "@/components/ui/DataTable";
+import { NuevoCampoDialog } from "@/components/forms/NuevoCampoDialog";
+import { NuevoLoteDialog } from "@/components/forms/NuevoLoteDialog";
 import { formatNumber } from "@/lib/utils";
-import type { Lot } from "@/types";
+import type { Lot, Field } from "@/types";
 
 // ─── Field type badge ──────────────────────────────────────
 function FieldTypeBadge({ type }: { type: string }) {
@@ -92,18 +94,16 @@ function PageError({ message }: { message: string }) {
 // ─── Page ─────────────────────────────────────────────────
 export default async function CamposPage() {
   let lots: Lot[];
+  let fields: Field[];
   try {
-    lots = await getLots();
+    [lots, fields] = await Promise.all([getLots(), getFields()]);
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Error de conexión con el servidor";
     return <PageError message={message} />;
   }
 
-  // Compute total surface
   const totalHa = lots.reduce((acc, l) => acc + Number(l.surfaceHa), 0);
-
-  // Unique fields count
   const fieldIds = new Set(lots.map((l) => l.fieldId));
 
   return (
@@ -111,6 +111,12 @@ export default async function CamposPage() {
       <Header
         title="Campos & Lotes"
         subtitle="Estructura predial del establecimiento"
+        actions={
+          <>
+            <NuevoLoteDialog fields={fields} />
+            <NuevoCampoDialog />
+          </>
+        }
       />
 
       <div className="flex-1 overflow-auto">

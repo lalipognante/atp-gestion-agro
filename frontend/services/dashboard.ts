@@ -1,23 +1,27 @@
 import { cookies } from "next/headers";
-import type { DashboardData } from "@/types";
+import type { DashboardData, YieldItem } from "@/types";
 
-const BACKEND_URL =
-  process.env.BACKEND_URL ?? "http://localhost:3000";
+const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:3000";
 
-export async function getDashboardData(): Promise<DashboardData> {
+async function fetchWithAuth(path: string) {
   const token = cookies().get("atp_token")?.value;
-
-  const res = await fetch(`${BACKEND_URL}/dashboard`, {
+  return fetch(`${BACKEND_URL}${path}`, {
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     cache: "no-store",
   });
+}
 
-  if (!res.ok) {
-    throw new Error(`Dashboard: ${res.status} ${res.statusText}`);
-  }
-
+export async function getDashboardData(): Promise<DashboardData> {
+  const res = await fetchWithAuth("/dashboard");
+  if (!res.ok) throw new Error(`Dashboard: ${res.status} ${res.statusText}`);
   return res.json() as Promise<DashboardData>;
+}
+
+export async function getYieldData(): Promise<YieldItem[]> {
+  const res = await fetchWithAuth("/dashboard/yield");
+  if (!res.ok) throw new Error(`Yield: ${res.status} ${res.statusText}`);
+  return res.json() as Promise<YieldItem[]>;
 }

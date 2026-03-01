@@ -16,41 +16,32 @@ export class StockService {
   ) {}
 
   async create(dto: CreateStockMovementDto) {
-    const campaign = await this.stockRepository.campaignExists(dto.campaignId);
-
-    if (!campaign) {
-      throw new NotFoundException('Campaign not found');
+    // Validate campaign if provided
+    if (dto.campaignId) {
+      const campaign = await this.stockRepository.campaignExists(dto.campaignId);
+      if (!campaign) throw new NotFoundException('Campaign not found');
     }
 
-    const summary = await this.getSummary(dto.campaignId);
-    const currentStock = summary.netStock;
     const qty = Number(dto.quantity);
 
-    // 🔒 Validación stock negativo
-    if (
-      dto.movementType === 'SALE' ||
-      dto.movementType === 'INTERNAL_CONSUMPTION'
-    ) {
-      if (qty > currentStock) {
+    // For SALE/INTERNAL_CONSUMPTION with campaign: validate stock
+    if (dto.campaignId && (dto.movementType === 'SALE' || dto.movementType === 'INTERNAL_CONSUMPTION')) {
+      const summary = await this.getSummary(dto.campaignId);
+      if (qty > summary.netStock) {
         throw new BadRequestException(
-          `Insufficient stock. Current stock: ${currentStock}`
+          `Insufficient stock. Current stock: ${summary.netStock}`,
         );
       }
     }
 
-    // 1️⃣ Crear stock movement
     const stockMovement = await this.stockRepository.create(dto);
 
-    // 2️⃣ Crear movimiento financiero si aplica
+    // Auto-create financial movement for SALE or PURCHASE
     if (dto.movementType === 'SALE' || dto.movementType === 'PURCHASE') {
       if (!dto.pricePerUnit) {
-        throw new BadRequestException(
-          'pricePerUnit required for SALE or PURCHASE'
-        );
+        throw new BadRequestException('pricePerUnit required for SALE or PURCHASE');
       }
-
       const amount = qty * dto.pricePerUnit;
-
       await this.prisma.financialMovement.create({
         data: {
           direction:
@@ -62,8 +53,8 @@ export class StockService {
           currency: Currency.ARS,
           exchangeRateAtCreation: 1,
           baseCurrencyAmount: amount,
-          
           stockMovementId: stockMovement.id,
+          ...(dto.campaignId ? { campaignId: dto.campaignId } : {}),
         },
       });
     }
@@ -79,60 +70,26 @@ export class StockService {
     const movements = await this.stockRepository.findByCampaign(campaignId);
 
     if (!movements.length) {
-      return {
-        product: null,
-        harvest: 0,
-        purchase: 0,
-        sale: 0,
-        internalConsumption: 0,
-        adjustment: 0,
-        netStock: 0,
-      };
+      return { product: null, harvest: 0, purchase: 0, sale: 0, internalConsumption: 0, adjustment: 0, netStock: 0 };
     }
 
-    let harvest = 0;
-    let purchase = 0;
-    let sale = 0;
-    let internalConsumption = 0;
-    let adjustment = 0;
+    let harvest = 0, purchase = 0, sale = 0, internalConsumption = 0, adjustment = 0;
 
     for (const m of movements) {
       const qty = Number(m.quantity);
-
       switch (m.movementType) {
-        case 'HARVEST':
-          harvest += qty;
-          break;
-        case 'PURCHASE':
-          purchase += qty;
-          break;
-        case 'SALE':
-          sale += qty;
-          break;
-        case 'INTERNAL_CONSUMPTION':
-          internalConsumption += qty;
-          break;
-        case 'ADJUSTMENT':
-          adjustment += qty;
-          break;
+        case 'HARVEST':   harvest += qty; break;
+        case 'PURCHASE':  purchase += qty; break;
+        case 'SALE':      sale += qty; break;
+        case 'INTERNAL_CONSUMPTION': internalConsumption += qty; break;
+        case 'ADJUSTMENT': adjustment += qty; break;
       }
     }
 
-    const netStock =
-      harvest +
-      purchase +
-      adjustment -
-      sale -
-      internalConsumption;
-
     return {
       product: movements[0].product,
-      harvest,
-      purchase,
-      sale,
-      internalConsumption,
-      adjustment,
-      netStock,
+      harvest, purchase, sale, internalConsumption, adjustment,
+      netStock: harvest + purchase + adjustment - sale - internalConsumption,
     };
   }
 }

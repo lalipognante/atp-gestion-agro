@@ -1,7 +1,9 @@
 import { getStockMovements } from "@/services/stockMovements";
+import { getCampaigns } from "@/services/campaigns";
 import { Header } from "@/components/layout/Header";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { DataTable, type TableColumn } from "@/components/ui/DataTable";
+import { NuevoStockDialog } from "@/components/forms/NuevoStockDialog";
 import { formatNumber, formatDate } from "@/lib/utils";
 import type { StockMovementRecord } from "@/types";
 
@@ -109,8 +111,12 @@ function PageError({ message }: { message: string }) {
 // ─── Page ─────────────────────────────────────────────────
 export default async function StockPage() {
   let movements: StockMovementRecord[];
+  let campaigns;
   try {
-    movements = await getStockMovements();
+    [movements, campaigns] = await Promise.all([
+      getStockMovements(),
+      getCampaigns().catch(() => []),
+    ]);
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Error de conexión con el servidor";
@@ -122,6 +128,7 @@ export default async function StockPage() {
       <Header
         title="Stock"
         subtitle="Movimientos de inventario agropecuario"
+        actions={<NuevoStockDialog campaigns={campaigns} />}
       />
 
       <div className="flex-1 overflow-auto">

@@ -15,4 +15,10 @@ export class DashboardController {
   getSummary() {
     return this.service.getSummary();
   }
+
+  @Get('yield')
+  @Roles(Role.ADMIN, Role.VIEWER)
+  getYield() {
+    return this.service.getYield();
+  }
 }

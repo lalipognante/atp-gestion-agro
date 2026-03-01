@@ -1,4 +1,12 @@
-import { IsString, IsNumber, IsEnum, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsEnum,
+  IsOptional,
+  IsPositive,
+  IsUUID,
+  IsDateString,
+} from 'class-validator';
 import { StockMovementType } from '@prisma/client';
 
 export class CreateStockMovementDto {
@@ -9,15 +17,26 @@ export class CreateStockMovementDto {
   movementType: StockMovementType;
 
   @IsNumber()
+  @IsPositive()
   quantity: number;
 
   @IsString()
   unit: string;
 
-  @IsString()
-  campaignId: string;
+  @IsOptional()
+  @IsUUID()
+  lotId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  campaignId?: string;
 
   @IsOptional()
   @IsNumber()
+  @IsPositive()
   pricePerUnit?: number;
+
+  @IsOptional()
+  @IsDateString()
+  date?: string;
 }

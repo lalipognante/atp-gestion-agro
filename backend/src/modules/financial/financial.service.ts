@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { FinancialRepository } from './financial.repository';
 import { PrismaService } from '../../prisma/prisma.service';
 import { FinancialDirection } from '@prisma/client';
+import { CreateFinancialMovementDto } from './dto/create-financial-movement.dto';
 
 @Injectable()
 export class FinancialService {
@@ -10,15 +11,17 @@ export class FinancialService {
     private readonly prisma: PrismaService,
   ) {}
 
+  async create(dto: CreateFinancialMovementDto) {
+    return this.repo.create(dto);
+  }
+
   async findAll() {
     return this.repo.findAll();
   }
 
   async getBalanceByCampaign(campaignId: string) {
     const movements = await this.prisma.financialMovement.findMany({
-      where: {
-        
-      },
+      where: { campaignId },
     });
 
     let income = 0;
@@ -27,17 +30,11 @@ export class FinancialService {
     for (const m of movements) {
       if (m.direction === FinancialDirection.INCOME) {
         income += Number(m.amount);
-      }
-
-      if (m.direction === FinancialDirection.EXPENSE) {
+      } else {
         expense += Number(m.amount);
       }
     }
 
-    return {
-      income,
-      expense,
-      balance: income - expense,
-    };
+    return { income, expense, balance: income - expense };
   }
 }

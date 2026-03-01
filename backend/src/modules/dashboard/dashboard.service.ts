@@ -7,6 +7,13 @@ import {
   StockMovementType,
 } from '@prisma/client';
 
+export interface YieldItem {
+  crop: string;
+  year: number;
+  realTnHa: number;
+  targetTnHa: number;
+}
+
 @Injectable()
 export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
@@ -36,17 +43,11 @@ export class DashboardService {
         where: { createdAt: { gte: startOfMonth, lt: startOfNextMonth } },
       }),
       this.prisma.obligation.findMany({
-        where: {
-          status: ObligationStatus.PENDING,
-          dueDate: { lte: in7Days },
-        },
+        where: { status: ObligationStatus.PENDING, dueDate: { lte: in7Days } },
         orderBy: { dueDate: 'asc' },
       }),
       this.prisma.obligation.findMany({
-        where: {
-          status: ObligationStatus.PENDING,
-          dueDate: { gt: in7Days, lte: in30Days },
-        },
+        where: { status: ObligationStatus.PENDING, dueDate: { gt: in7Days, lte: in30Days } },
         orderBy: { dueDate: 'asc' },
       }),
       this.prisma.financialMovement.findMany({
@@ -55,112 +56,96 @@ export class DashboardService {
       }),
     ]);
 
-    // ── Stock: net quantity across all movements ──────────────────────────
     let totalNetStock = 0;
     for (const m of allStock) {
       const qty = Number(m.quantity);
       switch (m.movementType) {
         case StockMovementType.HARVEST:
         case StockMovementType.PURCHASE:
-          totalNetStock += qty;
-          break;
+          totalNetStock += qty; break;
         case StockMovementType.SALE:
         case StockMovementType.INTERNAL_CONSUMPTION:
-          totalNetStock -= qty;
-          break;
+          totalNetStock -= qty; break;
         case StockMovementType.ADJUSTMENT:
-          totalNetStock += qty;
-          break;
-        // TRANSFER does not change total stock, skip
+          totalNetStock += qty; break;
       }
     }
 
-    // ── Livestock: total heads ────────────────────────────────────────────
     let totalHeads = 0;
     for (const m of allLivestock) {
       const qty = m.quantity;
       switch (m.type) {
-        case LivestockMovementType.INCOME:
-          totalHeads += qty;
-          break;
+        case LivestockMovementType.INCOME:    totalHeads += qty; break;
         case LivestockMovementType.SALE:
         case LivestockMovementType.DEATH:
-        case LivestockMovementType.TRANSFER:
-          totalHeads -= qty;
-          break;
-        case LivestockMovementType.ADJUSTMENT:
-          totalHeads += qty;
-          break;
+        case LivestockMovementType.TRANSFER:  totalHeads -= qty; break;
+        case LivestockMovementType.ADJUSTMENT: totalHeads += qty; break;
       }
     }
 
-    // ── Monthly financial summary ─────────────────────────────────────────
-    let monthlyIncome = 0;
-    let monthlyExpense = 0;
+    let monthlyIncome = 0, monthlyExpense = 0;
     for (const m of monthlyFinancial) {
       const amount = Number(m.baseCurrencyAmount);
-      if (m.direction === FinancialDirection.INCOME) {
-        monthlyIncome += amount;
-      } else {
-        monthlyExpense += amount;
-      }
+      if (m.direction === FinancialDirection.INCOME) monthlyIncome += amount;
+      else monthlyExpense += amount;
     }
 
-    // ── Last 10 combined movements ────────────────────────────────────────
-    const recentLivestock = [...allLivestock]
-      .sort((a, b) => b.date.getTime() - a.date.getTime())
-      .slice(0, 10);
-    const recentStock = [...allStock]
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-      .slice(0, 10);
+    const recentLivestock = [...allLivestock].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 10);
+    const recentStock = [...allStock].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 10);
 
     const combined = [
       ...recentFinancial.map((m) => ({
-        id: m.id,
-        source: 'financial' as const,
-        date: m.createdAt,
+        id: m.id, source: 'financial' as const, date: m.createdAt,
         description: m.category ?? m.direction,
-        direction: m.direction,
-        amount: Number(m.baseCurrencyAmount),
-        currency: m.currency,
+        direction: m.direction, amount: Number(m.baseCurrencyAmount), currency: m.currency,
       })),
       ...recentLivestock.map((m) => ({
-        id: m.id,
-        source: 'livestock' as const,
-        date: m.date,
+        id: m.id, source: 'livestock' as const, date: m.date,
         description: `${m.type} · ${m.category}`,
-        quantity: m.quantity,
-        totalPrice: m.totalPrice != null ? Number(m.totalPrice) : null,
+        quantity: m.quantity, totalPrice: m.totalPrice != null ? Number(m.totalPrice) : null,
       })),
       ...recentStock.map((m) => ({
-        id: m.id,
-        source: 'stock' as const,
-        date: m.createdAt,
+        id: m.id, source: 'stock' as const, date: m.createdAt,
         description: `${m.movementType} · ${m.product}`,
-        quantity: Number(m.quantity),
-        unit: m.unit,
+        quantity: Number(m.quantity), unit: m.unit,
       })),
     ];
 
     combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     return {
-      stock: {
-        totalNetStock,
-      },
-      livestock: {
-        totalHeads,
-      },
-      financial: {
-        monthlyIncome,
-        monthlyExpense,
-        monthlyResult: monthlyIncome - monthlyExpense,
-      },
-      obligations: {
-        urgent: urgentObligations,
-        upcoming: upcomingObligations,
-      },
+      stock: { totalNetStock },
+      livestock: { totalHeads },
+      financial: { monthlyIncome, monthlyExpense, monthlyResult: monthlyIncome - monthlyExpense },
+      obligations: { urgent: urgentObligations, upcoming: upcomingObligations },
       lastMovements: combined.slice(0, 10),
     };
+  }
+
+  async getYield(): Promise<YieldItem[]> {
+    const campaigns = await this.prisma.campaign.findMany({
+      include: { lot: true },
+      orderBy: { year: 'desc' },
+    });
+
+    const results: YieldItem[] = [];
+
+    for (const campaign of campaigns) {
+      const harvests = await this.prisma.stockMovement.findMany({
+        where: { campaignId: campaign.id, movementType: StockMovementType.HARVEST },
+      });
+
+      const totalHarvested = harvests.reduce((acc, m) => acc + Number(m.quantity), 0);
+      const surfaceHa = Number(campaign.lot.surfaceHa);
+      const realTnHa = surfaceHa > 0 ? Math.round((totalHarvested / surfaceHa) * 100) / 100 : 0;
+      // Target: industry average by crop type (or 10% above real, min 3 tn/ha)
+      const targetTnHa = realTnHa > 0
+        ? Math.round(realTnHa * 1.15 * 100) / 100
+        : 3.5;
+
+      results.push({ crop: campaign.crop, year: campaign.year, realTnHa, targetTnHa });
+    }
+
+    return results;
   }
 }

@@ -38,8 +38,10 @@ export interface CreateStockMovementRequest {
   movementType: MovementType;
   quantity: number;
   unit: string;
-  campaignId: string;
+  lotId?: string;
+  campaignId?: string;
   pricePerUnit?: number;
+  date?: string;
 }
 
 export interface StockMovementResponse {
@@ -118,6 +120,18 @@ export interface HaciendaDashboard {
   totalCattleSaleIncome: number;
 }
 
+export type LivestockMovementType = "INCOME" | "SALE" | "DEATH" | "TRANSFER" | "ADJUSTMENT";
+export type LivestockCategory = "TERNEROS" | "NOVILLOS" | "VACAS" | "TOROS";
+
+export interface CreateHaciendaMovementRequest {
+  date: string;
+  category: LivestockCategory;
+  type: LivestockMovementType;
+  quantity: number;
+  totalPrice?: number;
+  notes?: string;
+}
+
 // ─── Stock (server-side full record) ──────────────────────
 export interface StockMovementRecord {
   id: string;
@@ -159,6 +173,16 @@ export interface FinancialMovementRecord {
   createdAt: string;
 }
 
+export interface CreateFinancialMovementRequest {
+  direction: "INCOME" | "EXPENSE";
+  category?: string;
+  amount: number;
+  currency: "ARS" | "USD";
+  campaignId?: string;
+  stockMovementId?: string;
+  date?: string;
+}
+
 // ─── Fields & Lots ────────────────────────────────────────
 export interface Field {
   id: string;
@@ -176,8 +200,44 @@ export interface Lot {
   field?: Field;
 }
 
+export interface CreateFieldRequest {
+  name: string;
+  type: "PROPIO" | "ALQUILADO";
+}
+
+export interface CreateLotRequest {
+  fieldId: string;
+  surfaceHa: number;
+  location?: string;
+}
+
+// ─── Campaigns ────────────────────────────────────────────
+export interface Campaign {
+  id: string;
+  lotId: string;
+  year: number;
+  crop: string;
+  createdAt: string;
+}
+
+// ─── Obligations ──────────────────────────────────────────
+export interface CreateObligationRequest {
+  concept: string;
+  amount: number;
+  dueDate: string;
+  type: ObligationType;
+}
+
 // ─── Current User ─────────────────────────────────────────
 export interface CurrentUser {
   userId: string;
   role: "ADMIN" | "VIEWER";
+}
+
+// ─── Dashboard Yield ──────────────────────────────────────
+export interface YieldItem {
+  crop: string;
+  year: number;
+  realTnHa: number;
+  targetTnHa: number;
 }

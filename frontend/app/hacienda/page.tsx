@@ -3,6 +3,7 @@ import { Header } from "@/components/layout/Header";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { DataTable, type TableColumn } from "@/components/ui/DataTable";
+import { NuevoHaciendaDialog } from "@/components/forms/NuevoHaciendaDialog";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 
 // ─── Category label map ────────────────────────────────────
@@ -89,6 +90,7 @@ export default async function HaciendaPage() {
       <Header
         title="Hacienda"
         subtitle="Rodeo y movimientos ganaderos"
+        actions={<NuevoHaciendaDialog />}
       />
 
       <div className="flex-1 overflow-auto">
