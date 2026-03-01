@@ -23,6 +23,18 @@ function dayOffset(days: number): Date {
   return d;
 }
 
+// Returns a date in the current month at the given day and hour (UTC)
+function thisMonth(day: number, hour = 8): Date {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), day, hour, 0, 0));
+}
+
+// Returns a date in the previous month at the given day and hour (UTC)
+function lastMonth(day: number, hour = 8): Date {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, day, hour, 0, 0));
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -77,13 +89,13 @@ async function main() {
   // ── 4. Stock Movements ────────────────────────────────────────────────────
   console.log('── Stock movements ───────────────────────────────────────────');
 
-  // Soja 2026 (this month)
+  // Soja — mes actual
   await prisma.stockMovement.create({
     data: {
       product: 'soja', movementType: StockMovementType.HARVEST,
       quantity: 200, unit: 'tn',
       campaignId: campaignSoja.id, lotId: lot.id,
-      createdAt: new Date('2026-02-01T08:00:00Z'),
+      createdAt: thisMonth(1),
     },
   });
   const smSojaPurchase = await prisma.stockMovement.create({
@@ -91,7 +103,7 @@ async function main() {
       product: 'soja', movementType: StockMovementType.PURCHASE,
       quantity: 50, unit: 'tn',
       campaignId: campaignSoja.id, lotId: lot.id,
-      createdAt: new Date('2026-02-05T10:00:00Z'),
+      createdAt: thisMonth(5, 10),
     },
   });
   const smSojaSale = await prisma.stockMovement.create({
@@ -99,7 +111,7 @@ async function main() {
       product: 'soja', movementType: StockMovementType.SALE,
       quantity: 80, unit: 'tn',
       campaignId: campaignSoja.id, lotId: lot.id,
-      createdAt: new Date('2026-02-10T14:00:00Z'),
+      createdAt: thisMonth(10, 14),
     },
   });
   await prisma.stockMovement.create({
@@ -107,17 +119,17 @@ async function main() {
       product: 'soja', movementType: StockMovementType.INTERNAL_CONSUMPTION,
       quantity: 10, unit: 'tn',
       campaignId: campaignSoja.id, lotId: lot.id,
-      createdAt: new Date('2026-02-15T09:00:00Z'),
+      createdAt: thisMonth(15, 9),
     },
   });
 
-  // Trigo 2025 (last month)
+  // Trigo — mes anterior
   await prisma.stockMovement.create({
     data: {
       product: 'trigo', movementType: StockMovementType.HARVEST,
       quantity: 150, unit: 'tn',
       campaignId: campaignTrigo.id, lotId: lot.id,
-      createdAt: new Date('2026-01-10T08:00:00Z'),
+      createdAt: lastMonth(10),
     },
   });
   const smTrigoSale = await prisma.stockMovement.create({
@@ -125,7 +137,7 @@ async function main() {
       product: 'trigo', movementType: StockMovementType.SALE,
       quantity: 60, unit: 'tn',
       campaignId: campaignTrigo.id, lotId: lot.id,
-      createdAt: new Date('2026-01-20T11:00:00Z'),
+      createdAt: lastMonth(20, 11),
     },
   });
 
@@ -148,14 +160,14 @@ async function main() {
   // ── 5. Financial Movements ────────────────────────────────────────────────
   console.log('── Financial movements ───────────────────────────────────────');
 
-  // Feb (this month) — contribuyen al monthlyIncome/Expense
+  // Mes actual — contribuyen al monthlyIncome/Expense
   await prisma.financialMovement.create({
     data: {
       direction: FinancialDirection.EXPENSE, category: 'STOCK_PURCHASE',
       amount: 800000, currency: Currency.ARS,
       exchangeRateAtCreation: 1, baseCurrencyAmount: 800000,
       stockMovementId: smSojaPurchase.id, campaignId: campaignSoja.id,
-      createdAt: new Date('2026-02-05T10:00:00Z'),
+      createdAt: thisMonth(5, 10),
     },
   });
   const fmSojaSale = await prisma.financialMovement.create({
@@ -164,7 +176,7 @@ async function main() {
       amount: 4000000, currency: Currency.ARS,
       exchangeRateAtCreation: 1, baseCurrencyAmount: 4000000,
       stockMovementId: smSojaSale.id, campaignId: campaignSoja.id,
-      createdAt: new Date('2026-02-10T14:00:00Z'),
+      createdAt: thisMonth(10, 14),
     },
   });
   const fmCattleSale = await prisma.financialMovement.create({
@@ -172,18 +184,18 @@ async function main() {
       direction: FinancialDirection.INCOME, category: 'CATTLE_SALE',
       amount: 1500000, currency: Currency.ARS,
       exchangeRateAtCreation: 1, baseCurrencyAmount: 1500000,
-      createdAt: new Date('2026-02-12T12:00:00Z'),
+      createdAt: thisMonth(12, 12),
     },
   });
 
-  // Jan (last month) — no cuentan en el mes actual
+  // Mes anterior — no cuentan en el mes actual
   await prisma.financialMovement.create({
     data: {
       direction: FinancialDirection.EXPENSE, category: 'STOCK_PURCHASE',
       amount: 500000, currency: Currency.ARS,
       exchangeRateAtCreation: 1, baseCurrencyAmount: 500000,
       campaignId: campaignTrigo.id,
-      createdAt: new Date('2026-01-05T09:00:00Z'),
+      createdAt: lastMonth(5, 9),
     },
   });
   await prisma.financialMovement.create({
@@ -192,17 +204,17 @@ async function main() {
       amount: 2400000, currency: Currency.ARS,
       exchangeRateAtCreation: 1, baseCurrencyAmount: 2400000,
       stockMovementId: smTrigoSale.id, campaignId: campaignTrigo.id,
-      createdAt: new Date('2026-01-20T11:00:00Z'),
+      createdAt: lastMonth(20, 11),
     },
   });
 
-  // Jan 31: pago de obligación → usado por la obligation PAID
+  // Mes anterior: pago de obligación → usado por la obligation PAID
   const fmObligationPaid = await prisma.financialMovement.create({
     data: {
       direction: FinancialDirection.EXPENSE, category: 'OBLIGATION_RENT',
       amount: 150000, currency: Currency.ARS,
       exchangeRateAtCreation: 1, baseCurrencyAmount: 150000,
-      createdAt: new Date('2026-01-31T16:00:00Z'),
+      createdAt: lastMonth(28, 16),
     },
   });
 
