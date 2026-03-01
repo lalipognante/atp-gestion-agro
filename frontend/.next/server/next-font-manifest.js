@@ -1,1 +1,1 @@
-self.__NEXT_FONT_MANIFEST="{\"pages\":{},\"app\":{\"/workspaces/atp-gestion-agro/frontend/app/layout\":[\"static/media/13971731025ec697-s.p.woff2\",\"static/media/fa3e259cafa8f47e-s.p.woff2\"]},\"appUsingSizeAdjust\":true,\"pagesUsingSizeAdjust\":false}"
+self.__NEXT_FONT_MANIFEST='{"pages":{},"app":{"/workspaces/atp-gestion-agro/frontend/app/layout":["static/media/0e96d314a90a6138-s.p.woff2","static/media/b7ea2ab4a8ad1f81-s.p.woff2","static/media/13971731025ec697-s.p.woff2","static/media/fa3e259cafa8f47e-s.p.woff2"]},"appUsingSizeAdjust":true,"pagesUsingSizeAdjust":false}';

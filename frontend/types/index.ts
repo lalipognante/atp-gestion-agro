@@ -53,9 +53,60 @@ export interface StockMovementResponse {
   createdAt: string;
 }
 
-// ─── Dashboard Summary ────────────────────────────────────
+// ─── Dashboard Summary (legacy) ───────────────────────────
 export interface DashboardSummary {
   totalIncome: number;
   totalExpense: number;
   balance: number;
+}
+
+// ─── Dashboard B1 ─────────────────────────────────────────
+export type ObligationStatus = "PENDING" | "PAID";
+export type ObligationType   = "RENT" | "CREDIT" | "SUPPLIER" | "OTHER";
+export type ObligationCurrency = "ARS" | "USD";
+
+export interface ObligationItem {
+  id: string;
+  concept: string;
+  amount: string;
+  currency: ObligationCurrency;
+  dueDate: string;
+  status: ObligationStatus;
+  type: ObligationType;
+}
+
+export type MovementSource = "financial" | "livestock" | "stock";
+
+export interface LastMovement {
+  id: string;
+  source: MovementSource;
+  date: string;
+  description: string;
+  // financial
+  direction?: "INCOME" | "EXPENSE";
+  amount?: number;
+  currency?: string;
+  // livestock / stock
+  quantity?: number;
+  unit?: string;
+  totalPrice?: number | null;
+}
+
+export interface DashboardData {
+  stock: {
+    totalNetStock: number;
+  };
+  livestock: {
+    totalHeads: number;
+  };
+  financial: {
+    monthlyIncome: number;
+    monthlyExpense: number;
+    monthlyResult: number;
+  };
+  obligations: {
+    urgent: ObligationItem[];
+    upcoming: ObligationItem[];
+  };
+  lastMovements: LastMovement[];
 }

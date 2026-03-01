@@ -9,26 +9,43 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // ── Agro green scale (from HTML mockup) ──────────────
         green: {
-          950: "#0a1a10",
-          900: "#0f2318",
-          800: "#1a3a28",
-          700: "#1e4d35",
-          600: "#2d6a4a",
-          500: "#3d8a5f",
-          400: "#5aaa7a",
-          200: "#c4ddd0",
-          100: "#e8f3ed",
+          950: "#0B2218",
+          900: "#122F21",
+          800: "#1A4030",
+          700: "#235440",
+          600: "#2E6B52",
+          500: "#3A8A68",
+          400: "#52A882",
+          300: "#7DC4A4",
+          100: "#D6EDE4",
+          50:  "#EEF7F2",
         },
-        earth: {
-          600: "#8b6f47",
-          400: "#b8956a",
-          100: "#f5ede3",
+        // ── Accent ───────────────────────────────────────────
+        accent: {
+          DEFAULT: "#4CAF7D",
+          yellow:  "#C8D84B",
+        },
+        // ── Neutral surface scale ────────────────────────────
+        neutral: {
+          50:  "#F8F9F7",
+          100: "#F0F2EE",
+          200: "#E1E5DF",
+          400: "#9AA49A",
+          600: "#5A6659",
+          800: "#2D3530",
+          900: "#1A201A",
         },
       },
       fontFamily: {
-        sans: ["var(--font-dm-sans)", "system-ui", "sans-serif"],
+        sans:    ["var(--font-dm-sans)", "system-ui", "sans-serif"],
+        mono:    ["var(--font-dm-mono)", "ui-monospace", "monospace"],
         display: ["var(--font-dm-serif)", "Georgia", "serif"],
+      },
+      borderRadius: {
+        card: "14px",
+        btn:  "8px",
       },
     },
   },

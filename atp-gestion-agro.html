@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATP Gestión Agro – B1</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green-950: #0B2218;
+    --green-900: #122F21;
+    --green-800: #1A4030;
+    --green-700: #235440;
+    --green-600: #2E6B52;
+    --green-500: #3A8A68;
+    --green-400: #52A882;
+    --green-300: #7DC4A4;
+    --green-100: #D6EDE4;
+    --green-50:  #EEF7F2;
+    --accent:    #4CAF7D;
+    --accent-yellow: #C8D84B;
+    --neutral-50: #F8F9F7;
+    --neutral-100: #F0F2EE;
+    --neutral-200: #E1E5DF;
+    --neutral-400: #9AA49A;
+    --neutral-600: #5A6659;
+    --neutral-800: #2D3530;
+    --neutral-900: #1A201A;
+  }
+  * { font-family: 'DM Sans', sans-serif; }
+  .font-mono { font-family: 'DM Mono', monospace; }
+  body { background: var(--neutral-100); }
+
+  /* Sidebar */
+  .sidebar { background: var(--green-950); width: 220px; min-height: 100vh; }
+  .sidebar-logo { color: var(--accent); font-weight: 700; letter-spacing: -0.02em; font-size: 1.1rem; }
+  .nav-item { color: #5A7D6A; transition: all 0.15s; border-radius: 8px; }
+  .nav-item:hover { background: rgba(255,255,255,0.05); color: #9EC4B0; }
+  .nav-item.active { background: var(--green-800); color: #D6EDE4; }
+  .nav-item.active .nav-dot { background: var(--accent); }
+  .nav-dot { width: 6px; height: 6px; border-radius: 50%; background: transparent; }
+
+  /* Cards */
+  .card { background: #fff; border-radius: 14px; border: 1px solid var(--neutral-200); }
+  .card-dark { background: var(--green-900); border-radius: 14px; border: 1px solid var(--green-800); }
+  
+  /* KPI */
+  .kpi-value { font-size: 1.9rem; font-weight: 700; letter-spacing: -0.03em; color: var(--neutral-900); }
+  .kpi-label { font-size: 0.72rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--neutral-400); }
+  .kpi-trend-up { color: var(--accent); font-size: 0.75rem; font-weight: 600; }
+  .kpi-trend-down { color: #E07070; font-size: 0.75rem; font-weight: 600; }
+
+  /* Badge */
+  .badge-green { background: var(--green-50); color: var(--green-600); font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+  .badge-yellow { background: #FAFBE8; color: #7A8A10; font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+  .badge-red { background: #FEF0F0; color: #C0505A; font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+  .badge-gray { background: var(--neutral-100); color: var(--neutral-600); font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+
+  /* Bar chart stubs */
+  .bar { border-radius: 4px 4px 0 0; transition: opacity 0.15s; }
+  .bar:hover { opacity: 0.8; }
+
+  /* Table */
+  .tbl-head th { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--neutral-400); font-weight: 600; padding: 10px 14px; border-bottom: 1px solid var(--neutral-200); }
+  .tbl-row td { padding: 11px 14px; font-size: 0.82rem; color: var(--neutral-800); border-bottom: 1px solid var(--neutral-100); }
+  .tbl-row:last-child td { border-bottom: none; }
+  .tbl-row:hover td { background: var(--neutral-50); }
+
+  /* Button */
+  .btn-primary { background: var(--accent); color: #fff; font-weight: 600; font-size: 0.82rem; padding: 8px 18px; border-radius: 8px; border: none; cursor: pointer; transition: background 0.15s; }
+  .btn-primary:hover { background: var(--green-500); }
+  .btn-ghost { background: transparent; color: var(--neutral-600); font-weight: 500; font-size: 0.82rem; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--neutral-200); cursor: pointer; transition: all 0.15s; }
+  .btn-ghost:hover { background: var(--neutral-100); }
+
+  /* Donut stub */
+  .donut-ring { transform: rotate(-90deg); }
+
+  /* Avatar */
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--green-700); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.75rem; color: var(--green-100); }
+
+  /* Stat pill */
+  .stat-pill { background: var(--neutral-100); border-radius: 8px; padding: 8px 12px; }
+
+  /* Page switcher */
+  .page { display: none; }
+  .page.active-page { display: flex; }
+
+  /* Nav tab */
+  .tab-btn { padding: 6px 16px; border-radius: 8px; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.15s; color: var(--neutral-400); border: none; background: transparent; }
+  .tab-btn.active { background: var(--green-950); color: #D6EDE4; }
+
+  /* Progress bar */
+  .prog-track { background: var(--neutral-100); border-radius: 4px; height: 5px; }
+  .prog-fill { height: 5px; border-radius: 4px; background: var(--accent); }
+
+  /* Livestock status dot */
+  .status-ok { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); display: inline-block; }
+  .status-warn { width: 8px; height: 8px; border-radius: 50%; background: #E8B84B; display: inline-block; }
+  .status-alert { width: 8px; height: 8px; border-radius: 50%; background: #E07070; display: inline-block; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--neutral-200); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- ============================
+     DESIGN SYSTEM REFERENCE (hidden, top of file)
+     PALETA:
+     #0B2218  green-950 sidebar bg
+     #1A4030  green-800 nav active
+     #4CAF7D  accent    buttons, highlights
+     #C8D84B  accent-yellow  alt accent
+     #F8F9F7  content bg
+     TIPOGRAFÍA: DM Sans (body) + DM Mono (data)
+============================= -->
+
+<div style="display:flex; flex-direction:column; min-height:100vh;">
+
+  <!-- Top nav for page switching (design reference only) -->
+  <div style="background:#0B2218; padding:8px 20px; display:flex; align-items:center; gap:8px; border-bottom:1px solid #1A4030;">
+    <span style="color:#5A7D6A; font-size:0.7rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; margin-right:8px;">Vista:</span>
+    <button class="tab-btn active" id="btn-dashboard" onclick="showPage('dashboard')">Dashboard</button>
+    <button class="tab-btn" id="btn-hacienda" onclick="showPage('hacienda')">Hacienda</button>
+  </div>
+
+  <div style="display:flex; flex:1;">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar flex flex-col" style="flex-shrink:0; padding:24px 0;">
+    <!-- Logo -->
+    <div style="padding:0 20px 28px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <path d="M11 2C6 2 2 6 2 11s4 9 9 9 9-4 9-9-4-9-9-9z" fill="#4CAF7D" opacity="0.3"/>
+          <path d="M11 5c0 0-4 3-4 7 0 2.2 1.8 4 4 4s4-1.8 4-4c0-4-4-7-4-7z" fill="#4CAF7D"/>
+          <path d="M11 5v11" stroke="#0B2218" stroke-width="1.5"/>
+        </svg>
+        <span class="sidebar-logo">ATP Agro</span>
+      </div>
+      <div style="color:#2E6B52; font-size:0.65rem; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; margin-top:2px; padding-left:30px;">Versión B1</div>
+    </div>
+
+    <!-- Nav -->
+    <nav style="padding:0 12px; flex:1; display:flex; flex-direction:column; gap:2px;">
+      <div style="color:#2E6B52; font-size:0.62rem; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; padding:0 8px 8px;">Navegación</div>
+
+      <a href="#" class="nav-item active" style="display:flex; align-items:center; gap:10px; padding:9px 12px; text-decoration:none;">
+        <span class="nav-dot"></span>
+        <svg width="15" height="15" fill="none" viewBox="0 0 15 15"><rect x="1" y="1" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="8.5" y="1" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="1" y="8.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="8.5" y="8.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
+        <span style="font-size:0.83rem; font-weight:500;">Dashboard</span>
+      </a>
+
+      <a href="#" class="nav-item" style="display:flex; align-items:center; gap:10px; padding:9px 12px; text-decoration:none;">
+        <span class="nav-dot"></span>
+        <svg width="15" height="15" fill="none" viewBox="0 0 15 15"><path d="M1 13L5.5 4l3.5 5 2.5-3L14 13H1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        <span style="font-size:0.83rem; font-weight:500;">Campos & Lotes</span>
+      </a>
+
+      <a href="#" class="nav-item" style="display:flex; align-items:center; gap:10px; padding:9px 12px; text-decoration:none;">
+        <span class="nav-dot"></span>
+        <svg width="15" height="15" fill="none" viewBox="0 0 15 15"><rect x="1" y="4" width="13" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M5 4V3a2 2 0 014 0v1" stroke="currentColor" stroke-width="1.4"/></svg>
+        <span style="font-size:0.83rem; font-weight:500;">Stock</span>
+      </a>
+
+      <a href="#" class="nav-item" style="display:flex; align-items:center; gap:10px; padding:9px 12px; text-decoration:none;">
+        <span class="nav-dot"></span>
+        <svg width="15" height="15" fill="none" viewBox="0 0 15 15"><ellipse cx="7.5" cy="6" rx="4.5" ry="3" stroke="currentColor" stroke-width="1.4"/><path d="M3 9c0 1.657 2.015 3 4.5 3s4.5-1.343 4.5-3" stroke="currentColor" stroke-width="1.4"/></svg>
+        <span style="font-size:0.83rem; font-weight:500;">Hacienda</span>
+      </a>
+
+      <a href="#" class="nav-item" style="display:flex; align-items:center; gap:10px; padding:9px 12px; text-decoration:none;">
+        <span class="nav-dot"></span>
+        <svg width="15" height="15" fill="none" viewBox="0 0 15 15"><circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M7.5 4v4l2.5 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <span style="font-size:0.83rem; font-weight:500;">Finanzas</span>
+      </a>
+
+      <div style="height:1px; background:#1A4030; margin:12px 8px;"></div>
+
+      <a href="#" class="nav-item" style="display:flex; align-items:center; gap:10px; padding:9px 12px; text-decoration:none;">
+        <span class="nav-dot"></span>
+        <svg width="15" height="15" fill="none" viewBox="0 0 15 15"><circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.4"/><circle cx="7.5" cy="7.5" r="2" stroke="currentColor" stroke-width="1.4"/></svg>
+        <span style="font-size:0.83rem; font-weight:500;">Configuración</span>
+      </a>
+    </nav>
+
+    <!-- User -->
+    <div style="padding:16px 20px; border-top:1px solid #1A4030; margin-top:auto;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div class="avatar">JR</div>
+        <div>
+          <div style="color:#D6EDE4; font-size:0.8rem; font-weight:600;">Juan Rodríguez</div>
+          <div style="color:#3A8A68; font-size:0.68rem;">Administrador</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main style="flex:1; overflow:auto; background:var(--neutral-100);">
+
+    <!-- ==============================
+         PAGE: DASHBOARD
+    ============================== -->
+    <div class="page active-page" id="page-dashboard" style="flex-direction:column; min-height:100%;">
+      
+      <!-- Header -->
+      <header style="background:#fff; border-bottom:1px solid var(--neutral-200); padding:14px 28px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10;">
+        <div>
+          <div style="font-size:1.05rem; font-weight:700; color:var(--neutral-900); letter-spacing:-0.02em;">Dashboard</div>
+          <div style="font-size:0.75rem; color:var(--neutral-400);">Campaña 2024 · Establecimiento La Primavera</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button class="btn-ghost" style="display:flex; align-items:center; gap:6px;">
+            <svg width="13" height="13" fill="none" viewBox="0 0 13 13"><rect x="1" y="2.5" width="11" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M4 1v3M9 1v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            Jun 2024
+          </button>
+          <button class="btn-primary" style="display:flex; align-items:center; gap:6px;">
+            <svg width="12" height="12" fill="none" viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Nueva tarea
+          </button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div style="padding:24px 28px; display:flex; flex-direction:column; gap:20px;">
+
+        <!-- KPI Row -->
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px;">
+          
+          <!-- KPI 1 -->
+          <div class="card" style="padding:18px 20px;">
+            <div class="kpi-label" style="margin-bottom:10px;">Hectáreas Activas</div>
+            <div class="kpi-value">3,240</div>
+            <div style="display:flex; align-items:center; gap:6px; margin-top:8px;">
+              <span class="kpi-trend-up">↑ 4.2%</span>
+              <span style="font-size:0.72rem; color:var(--neutral-400);">vs campaña anterior</span>
+            </div>
+            <div class="prog-track" style="margin-top:12px;">
+              <div class="prog-fill" style="width:72%;"></div>
+            </div>
+          </div>
+
+          <!-- KPI 2 -->
+          <div class="card" style="padding:18px 20px;">
+            <div class="kpi-label" style="margin-bottom:10px;">Cabezas Hacienda</div>
+            <div class="kpi-value">1,847</div>
+            <div style="display:flex; align-items:center; gap:6px; margin-top:8px;">
+              <span class="kpi-trend-up">↑ 2.8%</span>
+              <span style="font-size:0.72rem; color:var(--neutral-400);">último mes</span>
+            </div>
+            <div class="prog-track" style="margin-top:12px;">
+              <div class="prog-fill" style="width:58%; background:var(--accent-yellow);"></div>
+            </div>
+          </div>
+
+          <!-- KPI 3 -->
+          <div class="card" style="padding:18px 20px;">
+            <div class="kpi-label" style="margin-bottom:10px;">Stock Insumos</div>
+            <div class="kpi-value">94.3t</div>
+            <div style="display:flex; align-items:center; gap:6px; margin-top:8px;">
+              <span class="kpi-trend-down">↓ 1.1%</span>
+              <span style="font-size:0.72rem; color:var(--neutral-400);">vs mes anterior</span>
+            </div>
+            <div class="prog-track" style="margin-top:12px;">
+              <div class="prog-fill" style="width:45%; background:#E07070;"></div>
+            </div>
+          </div>
+
+          <!-- KPI 4 -->
+          <div class="card" style="padding:18px 20px; border-left:3px solid var(--accent);">
+            <div class="kpi-label" style="margin-bottom:10px;">Saldo Financiero</div>
+            <div class="kpi-value" style="color:var(--green-600);">$2.4M</div>
+            <div style="display:flex; align-items:center; gap:6px; margin-top:8px;">
+              <span class="kpi-trend-up">↑ 12%</span>
+              <span style="font-size:0.72rem; color:var(--neutral-400);">acumulado 2024</span>
+            </div>
+            <div class="prog-track" style="margin-top:12px;">
+              <div class="prog-fill" style="width:68%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Middle Row: Chart + Activity -->
+        <div style="display:grid; grid-template-columns:1fr 340px; gap:14px;">
+          
+          <!-- Bar Chart: Producción por Lote -->
+          <div class="card" style="padding:20px 22px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+              <div>
+                <div style="font-size:0.9rem; font-weight:700; color:var(--neutral-900); letter-spacing:-0.01em;">Rendimiento por Cultivo</div>
+                <div style="font-size:0.72rem; color:var(--neutral-400); margin-top:2px;">Tn/ha · Campaña 2023–2024</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:14px;">
+                <div style="display:flex; align-items:center; gap:5px;"><div style="width:10px;height:10px;border-radius:2px;background:var(--accent);"></div><span style="font-size:0.7rem;color:var(--neutral-400);">Real</span></div>
+                <div style="display:flex; align-items:center; gap:5px;"><div style="width:10px;height:10px;border-radius:2px;background:var(--accent-yellow);"></div><span style="font-size:0.7rem;color:var(--neutral-400);">Objetivo</span></div>
+                <button class="btn-ghost" style="padding:5px 10px;">↗</button>
+              </div>
+            </div>
+            <!-- Chart area -->
+            <div style="display:flex; align-items:flex-end; gap:16px; height:140px; padding-bottom:8px; border-bottom:1px solid var(--neutral-100);">
+              <!-- Soja -->
+              <div style="display:flex; flex-direction:column; align-items:center; gap:3px; flex:1;">
+                <div style="display:flex; align-items:flex-end; gap:3px; height:120px; width:100%;">
+                  <div class="bar" style="flex:1; height:86px; background:var(--accent); opacity:0.9;"></div>
+                  <div class="bar" style="flex:1; height:72px; background:var(--accent-yellow); opacity:0.7;"></div>
+                </div>
+                <div style="font-size:0.68rem; color:var(--neutral-400); font-weight:500;">Soja</div>
+              </div>
+              <!-- Maíz -->
+              <div style="display:flex; flex-direction:column; align-items:center; gap:3px; flex:1;">
+                <div style="display:flex; align-items:flex-end; gap:3px; height:120px; width:100%;">
+                  <div class="bar" style="flex:1; height:108px; background:var(--accent); opacity:0.9;"></div>
+                  <div class="bar" style="flex:1; height:115px; background:var(--accent-yellow); opacity:0.7;"></div>
+                </div>
+                <div style="font-size:0.68rem; color:var(--neutral-400); font-weight:500;">Maíz</div>
+              </div>
+              <!-- Trigo -->
+              <div style="display:flex; flex-direction:column; align-items:center; gap:3px; flex:1;">
+                <div style="display:flex; align-items:flex-end; gap:3px; height:120px; width:100%;">
+                  <div class="bar" style="flex:1; height:65px; background:var(--accent); opacity:0.9;"></div>
+                  <div class="bar" style="flex:1; height:80px; background:var(--accent-yellow); opacity:0.7;"></div>
+                </div>
+                <div style="font-size:0.68rem; color:var(--neutral-400); font-weight:500;">Trigo</div>
+              </div>
+              <!-- Sorgo -->
+              <div style="display:flex; flex-direction:column; align-items:center; gap:3px; flex:1;">
+                <div style="display:flex; align-items:flex-end; gap:3px; height:120px; width:100%;">
+                  <div class="bar" style="flex:1; height:78px; background:var(--accent); opacity:0.9;"></div>
+                  <div class="bar" style="flex:1; height:70px; background:var(--accent-yellow); opacity:0.7;"></div>
+                </div>
+                <div style="font-size:0.68rem; color:var(--neutral-400); font-weight:500;">Sorgo</div>
+              </div>
+              <!-- Girasol -->
+              <div style="display:flex; flex-direction:column; align-items:center; gap:3px; flex:1;">
+                <div style="display:flex; align-items:flex-end; gap:3px; height:120px; width:100%;">
+                  <div class="bar" style="flex:1; height:50px; background:var(--accent); opacity:0.9;"></div>
+                  <div class="bar" style="flex:1; height:60px; background:var(--accent-yellow); opacity:0.7;"></div>
+                </div>
+                <div style="font-size:0.68rem; color:var(--neutral-400); font-weight:500;">Girasol</div>
+              </div>
+            </div>
+            <!-- Y axis labels -->
+            <div style="display:flex; justify-content:flex-end; margin-top:6px;">
+              <div style="font-size:0.68rem; color:var(--neutral-400);">tn/ha</div>
+            </div>
+          </div>
+
+          <!-- Activity panel -->
+          <div class="card" style="padding:18px 20px; display:flex; flex-direction:column;">
+            <div style="font-size:0.88rem; font-weight:700; color:var(--neutral-900); margin-bottom:14px;">Actividad Reciente</div>
+            <div style="display:flex; flex-direction:column; gap:0; flex:1; overflow:hidden;">
+              
+              <div style="display:flex; gap:10px; padding:10px 0; border-bottom:1px solid var(--neutral-100);">
+                <div style="width:32px;height:32px;border-radius:8px;background:var(--green-50);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 14 14"><path d="M2 11L5 5l3 4 2-2.5L12 11H2z" fill="var(--green-500)"/></svg>
+                </div>
+                <div>
+                  <div style="font-size:0.8rem; font-weight:600; color:var(--neutral-900);">Siembra Lote 4-A</div>
+                  <div style="font-size:0.7rem; color:var(--neutral-400);">Soja – 240 ha · hace 2h</div>
+                </div>
+              </div>
+
+              <div style="display:flex; gap:10px; padding:10px 0; border-bottom:1px solid var(--neutral-100);">
+                <div style="width:32px;height:32px;border-radius:8px;background:#FAFBE8;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 14 14"><rect x="2" y="3" width="10" height="8" rx="1.5" stroke="#7A8A10" stroke-width="1.4"/><path d="M5 3V2.5a2 2 0 014 0V3" stroke="#7A8A10" stroke-width="1.4"/></svg>
+                </div>
+                <div>
+                  <div style="font-size:0.8rem; font-weight:600; color:var(--neutral-900);">Ingreso Semillas</div>
+                  <div style="font-size:0.7rem; color:var(--neutral-400);">1,400 kg Maíz DK747 · ayer</div>
+                </div>
+              </div>
+
+              <div style="display:flex; gap:10px; padding:10px 0; border-bottom:1px solid var(--neutral-100);">
+                <div style="width:32px;height:32px;border-radius:8px;background:#FEF5F0;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 14 14"><ellipse cx="7" cy="5.5" rx="4" ry="2.5" stroke="#C0705A" stroke-width="1.4"/><path d="M3 8c0 1.38 1.79 2.5 4 2.5s4-1.12 4-2.5" stroke="#C0705A" stroke-width="1.4"/></svg>
+                </div>
+                <div>
+                  <div style="font-size:0.8rem; font-weight:600; color:var(--neutral-900);">Control Sanidad</div>
+                  <div style="font-size:0.7rem; color:var(--neutral-400);">Lote B Hacienda · hace 1d</div>
+                </div>
+              </div>
+
+              <div style="display:flex; gap:10px; padding:10px 0; border-bottom:1px solid var(--neutral-100);">
+                <div style="width:32px;height:32px;border-radius:8px;background:var(--green-50);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5" stroke="var(--green-500)" stroke-width="1.4"/><path d="M7 4v4l2 1" stroke="var(--green-500)" stroke-width="1.4" stroke-linecap="round"/></svg>
+                </div>
+                <div>
+                  <div style="font-size:0.8rem; font-weight:600; color:var(--neutral-900);">Pago Arrendamiento</div>
+                  <div style="font-size:0.7rem; color:var(--neutral-400);">Lote Aguirre · $48,000 · 2d</div>
+                </div>
+              </div>
+
+              <div style="display:flex; gap:10px; padding:10px 0;">
+                <div style="width:32px;height:32px;border-radius:8px;background:var(--neutral-100);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 14 14"><path d="M7 2l1.5 3.5 3.5.3-2.5 2.4.7 3.5L7 10l-3.2 1.7.7-3.5-2.5-2.4 3.5-.3L7 2z" stroke="var(--neutral-400)" stroke-width="1.3"/></svg>
+                </div>
+                <div>
+                  <div style="font-size:0.8rem; font-weight:600; color:var(--neutral-900);">Pesada Lote C</div>
+                  <div style="font-size:0.7rem; color:var(--neutral-400);">GMD 0.82 kg/día · hace 3d</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Row: Lotes + Obligaciones -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+          
+          <!-- Campos & Lotes -->
+          <div class="card" style="padding:20px 22px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+              <div style="font-size:0.88rem; font-weight:700; color:var(--neutral-900);">Campos & Lotes</div>
+              <button class="btn-ghost" style="padding:5px 12px; font-size:0.75rem;">Ver todos →</button>
+            </div>
+            <table style="width:100%; border-collapse:collapse;">
+              <thead class="tbl-head">
+                <tr>
+                  <th style="text-align:left;">Lote</th>
+                  <th style="text-align:left;">Cultivo</th>
+                  <th style="text-align:left;">Etapa</th>
+                  <th style="text-align:right;">Ha</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="tbl-row"><td>Lote 4-A</td><td>Soja RR</td><td><span class="badge-green">Siembra</span></td><td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">240</td></tr>
+                <tr class="tbl-row"><td>Lote 2-B</td><td>Maíz DK</td><td><span class="badge-yellow">V6</span></td><td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">185</td></tr>
+                <tr class="tbl-row"><td>Lote 1-C</td><td>Trigo</td><td><span class="badge-green">Cosecha</span></td><td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">320</td></tr>
+                <tr class="tbl-row"><td>Lote 3-A</td><td>Sorgo</td><td><span class="badge-gray">Barbecho</span></td><td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">150</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Obligaciones próximas -->
+          <div class="card" style="padding:20px 22px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+              <div style="font-size:0.88rem; font-weight:700; color:var(--neutral-900);">Obligaciones Próximas</div>
+              <button class="btn-ghost" style="padding:5px 12px; font-size:0.75rem;">Ver todas →</button>
+            </div>
+            <table style="width:100%; border-collapse:collapse;">
+              <thead class="tbl-head">
+                <tr>
+                  <th style="text-align:left;">Concepto</th>
+                  <th style="text-align:left;">Vence</th>
+                  <th style="text-align:right;">Monto</th>
+                  <th style="text-align:center;">Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="tbl-row">
+                  <td>Arrendamiento Lote Aguirre</td>
+                  <td style="font-size:0.75rem; color:var(--neutral-400);">15 Jul</td>
+                  <td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">$48,000</td>
+                  <td style="text-align:center;"><span class="badge-red">Pendiente</span></td>
+                </tr>
+                <tr class="tbl-row">
+                  <td>Agroquímicos SYNGENTA</td>
+                  <td style="font-size:0.75rem; color:var(--neutral-400);">20 Jul</td>
+                  <td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">$123,500</td>
+                  <td style="text-align:center;"><span class="badge-yellow">En proceso</span></td>
+                </tr>
+                <tr class="tbl-row">
+                  <td>Combustible julio</td>
+                  <td style="font-size:0.75rem; color:var(--neutral-400);">31 Jul</td>
+                  <td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">$34,200</td>
+                  <td style="text-align:center;"><span class="badge-green">Pagado</span></td>
+                </tr>
+                <tr class="tbl-row">
+                  <td>Seguro equipos</td>
+                  <td style="font-size:0.75rem; color:var(--neutral-400);">05 Ago</td>
+                  <td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">$22,800</td>
+                  <td style="text-align:center;"><span class="badge-gray">Programado</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ==============================
+         PAGE: HACIENDA
+    ============================== -->
+    <div class="page" id="page-hacienda" style="flex-direction:column; min-height:100%;">
+      
+      <!-- Header -->
+      <header style="background:#fff; border-bottom:1px solid var(--neutral-200); padding:14px 28px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10;">
+        <div>
+          <div style="font-size:1.05rem; font-weight:700; color:var(--neutral-900); letter-spacing:-0.02em;">Hacienda</div>
+          <div style="font-size:0.75rem; color:var(--neutral-400);">Gestión de Rodeo · Establecimiento La Primavera</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button class="btn-ghost" style="display:flex; align-items:center; gap:6px; font-size:0.78rem;">
+            <svg width="12" height="12" fill="none" viewBox="0 0 12 12"><path d="M1 3h10M3 6h6M5 9h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Filtrar
+          </button>
+          <button class="btn-ghost" style="display:flex; align-items:center; gap:6px; font-size:0.78rem;">
+            <svg width="12" height="12" fill="none" viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Registrar evento
+          </button>
+          <button class="btn-primary" style="display:flex; align-items:center; gap:6px;">
+            <svg width="12" height="12" fill="none" viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Nuevo lote
+          </button>
+        </div>
+      </header>
+
+      <div style="padding:24px 28px; display:flex; flex-direction:column; gap:20px;">
+
+        <!-- KPIs Hacienda -->
+        <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:14px;">
+          <div class="card" style="padding:16px 18px;">
+            <div class="kpi-label" style="margin-bottom:8px;">Total Cabezas</div>
+            <div class="kpi-value" style="font-size:1.6rem;">1,847</div>
+            <div style="margin-top:6px;"><span class="badge-green">+38 este mes</span></div>
+          </div>
+          <div class="card" style="padding:16px 18px;">
+            <div class="kpi-label" style="margin-bottom:8px;">GMD Promedio</div>
+            <div class="kpi-value" style="font-size:1.6rem;">0.84</div>
+            <div style="font-size:0.7rem; color:var(--neutral-400); margin-top:4px;">kg/día · rodeo general</div>
+          </div>
+          <div class="card" style="padding:16px 18px;">
+            <div class="kpi-label" style="margin-bottom:8px;">Peso Promedio</div>
+            <div class="kpi-value" style="font-size:1.6rem;">398 kg</div>
+            <div style="margin-top:6px;"><span class="kpi-trend-up">↑ 12 kg vs mes anterior</span></div>
+          </div>
+          <div class="card" style="padding:16px 18px;">
+            <div class="kpi-label" style="margin-bottom:8px;">En Tratamiento</div>
+            <div class="kpi-value" style="font-size:1.6rem; color:#E07070;">23</div>
+            <div style="margin-top:6px;"><span class="badge-red">Atención</span></div>
+          </div>
+          <div class="card" style="padding:16px 18px; border-left:3px solid var(--accent);">
+            <div class="kpi-label" style="margin-bottom:8px;">Eficiencia de carga</div>
+            <div class="kpi-value" style="font-size:1.6rem;">1.4</div>
+            <div style="font-size:0.7rem; color:var(--neutral-400); margin-top:4px;">EV/ha · campo natural</div>
+          </div>
+        </div>
+
+        <!-- Middle: Lotes + GMD Chart -->
+        <div style="display:grid; grid-template-columns:1fr 320px; gap:14px;">
+          
+          <!-- Tabla de Lotes Hacienda -->
+          <div class="card" style="padding:20px 22px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+              <div style="font-size:0.88rem; font-weight:700; color:var(--neutral-900);">Lotes de Hacienda</div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <input type="text" placeholder="Buscar lote…" style="font-size:0.78rem; padding:6px 12px; border-radius:8px; border:1px solid var(--neutral-200); background:var(--neutral-50); color:var(--neutral-800); outline:none; width:160px;" />
+              </div>
+            </div>
+            <table style="width:100%; border-collapse:collapse;">
+              <thead class="tbl-head">
+                <tr>
+                  <th style="text-align:left;">Lote</th>
+                  <th style="text-align:left;">Categoría</th>
+                  <th style="text-align:right;">Cabezas</th>
+                  <th style="text-align:right;">Peso Prom.</th>
+                  <th style="text-align:right;">GMD</th>
+                  <th style="text-align:center;">Estado</th>
+                  <th style="text-align:left;">Potrero</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="tbl-row">
+                  <td style="font-weight:600;">L-01</td>
+                  <td>Novillos</td>
+                  <td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">248</td>
+                  <td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">420 kg</td>
+                  <td style="text-align:right;"><span style="font-family:'DM Mono',monospace; font-size:0.78rem; color:var(--green-600); font-weight:600;">0.92</span></td>
+                  <td style="text-align:center;"><span class="status-ok"></span></td>
+                  <td style="font-size:0.75rem; color:var(--neutral-400);">P-3 Norte</td>
+                </tr>
+                <tr class="tbl-row">
+                  <td style="font-weight:600;">L-02</td>
+                  <td>Vacas cría</td>
+                  <td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">380</td>
+                  <td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">385 kg</td>
+                  <td style="text-align:right;"><span style="font-family:'DM Mono',monospace; font-size:0.78rem; color:var(--neutral-600);">0.74</span></td>
+                  <td style="text-align:center;"><span class="status-ok"></span></td>
+                  <td style="font-size:0.75rem; color:var(--neutral-400);">P-1 Sur</td>
+                </tr>
+                <tr class="tbl-row">
+                  <td style="font-weight:600;">L-03</td>
+                  <td>Terneros dest.</td>
+                  <td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">312</td>
+                  <td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">180 kg</td>
+                  <td style="text-align:right;"><span style="font-family:'DM Mono',monospace; font-size:0.78rem; color:var(--green-600); font-weight:600;">1.05</span></td>
+                  <td style="text-align:center;"><span class="status-ok"></span></td>
+                  <td style="font-size:0.75rem; color:var(--neutral-400);">Corral C</td>
+                </tr>
+                <tr class="tbl-row">
+                  <td style="font-weight:600;">L-04</td>
+                  <td>Toros</td>
+                  <td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">24</td>
+                  <td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">650 kg</td>
+                  <td style="text-align:right;"><span style="font-family:'DM Mono',monospace; font-size:0.78rem; color:var(--neutral-600);">0.40</span></td>
+                  <td style="text-align:center;"><span class="status-ok"></span></td>
+                  <td style="font-size:0.75rem; color:var(--neutral-400);">P-5 Este</td>
+                </tr>
+                <tr class="tbl-row">
+                  <td style="font-weight:600;">L-05</td>
+                  <td>Novillos invern.</td>
+                  <td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">195</td>
+                  <td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">310 kg</td>
+                  <td style="text-align:right;"><span style="font-family:'DM Mono',monospace; font-size:0.78rem; color:#E8B84B; font-weight:600;">0.68</span></td>
+                  <td style="text-align:center;"><span class="status-warn"></span></td>
+                  <td style="font-size:0.75rem; color:var(--neutral-400);">Feedlot A</td>
+                </tr>
+                <tr class="tbl-row">
+                  <td style="font-weight:600;">L-06</td>
+                  <td>Vacas trat.</td>
+                  <td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">23</td>
+                  <td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">350 kg</td>
+                  <td style="text-align:right;"><span style="font-family:'DM Mono',monospace; font-size:0.78rem; color:#E07070; font-weight:600;">0.21</span></td>
+                  <td style="text-align:center;"><span class="status-alert"></span></td>
+                  <td style="font-size:0.75rem; color:var(--neutral-400);">Enfermería</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Sidebar right: GMD + Sanidad -->
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            
+            <!-- GMD donut -->
+            <div class="card" style="padding:18px 20px;">
+              <div style="font-size:0.8rem; font-weight:700; color:var(--neutral-900); margin-bottom:12px;">GMD por Categoría</div>
+              <!-- Simple visual bars -->
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <div>
+                  <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span style="font-size:0.75rem; color:var(--neutral-600);">Terneros dest.</span>
+                    <span style="font-size:0.75rem; font-weight:600; font-family:'DM Mono',monospace; color:var(--green-600);">1.05 kg/d</span>
+                  </div>
+                  <div class="prog-track"><div class="prog-fill" style="width:100%;"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span style="font-size:0.75rem; color:var(--neutral-600);">Novillos L-01</span>
+                    <span style="font-size:0.75rem; font-weight:600; font-family:'DM Mono',monospace; color:var(--green-600);">0.92 kg/d</span>
+                  </div>
+                  <div class="prog-track"><div class="prog-fill" style="width:88%;"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span style="font-size:0.75rem; color:var(--neutral-600);">Vacas cría</span>
+                    <span style="font-size:0.75rem; font-weight:600; font-family:'DM Mono',monospace; color:var(--neutral-600);">0.74 kg/d</span>
+                  </div>
+                  <div class="prog-track"><div class="prog-fill" style="width:70%;"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span style="font-size:0.75rem; color:var(--neutral-600);">Novillos invern.</span>
+                    <span style="font-size:0.75rem; font-weight:600; font-family:'DM Mono',monospace; color:#E8B84B;">0.68 kg/d</span>
+                  </div>
+                  <div class="prog-track"><div class="prog-fill" style="width:65%; background:#E8B84B;"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span style="font-size:0.75rem; color:var(--neutral-600);">Vacas trat.</span>
+                    <span style="font-size:0.75rem; font-weight:600; font-family:'DM Mono',monospace; color:#E07070;">0.21 kg/d</span>
+                  </div>
+                  <div class="prog-track"><div class="prog-fill" style="width:20%; background:#E07070;"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sanidad proxima -->
+            <div class="card" style="padding:18px 20px;">
+              <div style="font-size:0.8rem; font-weight:700; color:var(--neutral-900); margin-bottom:12px;">Sanidad Programada</div>
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                <div style="background:var(--green-50); border-radius:8px; padding:10px 12px;">
+                  <div style="font-size:0.78rem; font-weight:600; color:var(--green-700);">Vacunación Aftosa</div>
+                  <div style="font-size:0.7rem; color:var(--green-600); margin-top:2px;">L-01, L-02 · 18 Jul · 628 cb</div>
+                </div>
+                <div style="background:#FAFBE8; border-radius:8px; padding:10px 12px;">
+                  <div style="font-size:0.78rem; font-weight:600; color:#7A8A10;">Antiparasitario</div>
+                  <div style="font-size:0.7rem; color:#9AAA20; margin-top:2px;">L-03, L-05 · 25 Jul · 507 cb</div>
+                </div>
+                <div style="background:#FEF5F0; border-radius:8px; padding:10px 12px;">
+                  <div style="font-size:0.78rem; font-weight:600; color:#C0705A;">Control L-06</div>
+                  <div style="font-size:0.7rem; color:#D08070; margin-top:2px;">Revisión tratamiento · mañana</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Eventos recientes -->
+        <div class="card" style="padding:20px 22px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+            <div style="font-size:0.88rem; font-weight:700; color:var(--neutral-900);">Eventos de Hacienda</div>
+            <button class="btn-ghost" style="padding:5px 12px; font-size:0.75rem;">Registrar evento</button>
+          </div>
+          <table style="width:100%; border-collapse:collapse;">
+            <thead class="tbl-head">
+              <tr>
+                <th style="text-align:left;">Fecha</th>
+                <th style="text-align:left;">Tipo</th>
+                <th style="text-align:left;">Lote</th>
+                <th style="text-align:right;">Cabezas</th>
+                <th style="text-align:left;">Detalle</th>
+                <th style="text-align:left;">Responsable</th>
+                <th style="text-align:center;">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="tbl-row">
+                <td style="font-family:'DM Mono',monospace; font-size:0.76rem; color:var(--neutral-400);">12/07/24</td>
+                <td><span class="badge-green">Pesada</span></td>
+                <td style="font-weight:600;">L-01</td>
+                <td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">248</td>
+                <td style="font-size:0.78rem; color:var(--neutral-600);">GMD 0.92 · peso prom. 420 kg</td>
+                <td style="font-size:0.75rem; color:var(--neutral-400);">Pedro G.</td>
+                <td style="text-align:center;"><span class="badge-green">OK</span></td>
+              </tr>
+              <tr class="tbl-row">
+                <td style="font-family:'DM Mono',monospace; font-size:0.76rem; color:var(--neutral-400);">10/07/24</td>
+                <td><span class="badge-red">Sanidad</span></td>
+                <td style="font-weight:600;">L-06</td>
+                <td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">23</td>
+                <td style="font-size:0.78rem; color:var(--neutral-600);">Inicio tratamiento antibiótico</td>
+                <td style="font-size:0.75rem; color:var(--neutral-400);">Dr. Sosa</td>
+                <td style="text-align:center;"><span class="badge-yellow">Activo</span></td>
+              </tr>
+              <tr class="tbl-row">
+                <td style="font-family:'DM Mono',monospace; font-size:0.76rem; color:var(--neutral-400);">08/07/24</td>
+                <td><span class="badge-gray">Movimiento</span></td>
+                <td style="font-weight:600;">L-03</td>
+                <td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">85</td>
+                <td style="font-size:0.78rem; color:var(--neutral-600);">Traslado Corral A → Corral C</td>
+                <td style="font-size:0.75rem; color:var(--neutral-400);">Juan R.</td>
+                <td style="text-align:center;"><span class="badge-green">OK</span></td>
+              </tr>
+              <tr class="tbl-row">
+                <td style="font-family:'DM Mono',monospace; font-size:0.76rem; color:var(--neutral-400);">05/07/24</td>
+                <td><span class="badge-yellow">Venta</span></td>
+                <td style="font-weight:600;">L-01</td>
+                <td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">40</td>
+                <td style="font-size:0.78rem; color:var(--neutral-600);">Novillos gordos · $3,200/cb</td>
+                <td style="font-size:0.75rem; color:var(--neutral-400);">Juan R.</td>
+                <td style="text-align:center;"><span class="badge-green">Facturado</span></td>
+              </tr>
+              <tr class="tbl-row">
+                <td style="font-family:'DM Mono',monospace; font-size:0.76rem; color:var(--neutral-400);">01/07/24</td>
+                <td><span class="badge-green">Destete</span></td>
+                <td style="font-weight:600;">L-02</td>
+                <td style="text-align:right; font-family:'DM Mono',monospace; font-size:0.78rem;">124</td>
+                <td style="font-size:0.78rem; color:var(--neutral-600);">Destete temporario · peso 172 kg</td>
+                <td style="font-size:0.75rem; color:var(--neutral-400);">Pedro G.</td>
+                <td style="text-align:center;"><span class="badge-green">OK</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+  </div>
+</div>
+
+<!-- ===== DESIGN SYSTEM FOOTER (reference strip) ===== -->
+<div style="background:#fff; border-top:1px solid var(--neutral-200); padding:16px 28px; display:flex; align-items:center; gap:28px; flex-wrap:wrap;">
+  <div style="font-size:0.65rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--neutral-400); margin-right:8px;">Design System</div>
+  <!-- Colors -->
+  <div style="display:flex; align-items:center; gap:6px;">
+    <div style="width:20px;height:20px;border-radius:4px;background:#0B2218;"></div>
+    <span style="font-size:0.7rem; font-family:'DM Mono',monospace; color:var(--neutral-400);">#0B2218</span>
+  </div>
+  <div style="display:flex; align-items:center; gap:6px;">
+    <div style="width:20px;height:20px;border-radius:4px;background:#1A4030;"></div>
+    <span style="font-size:0.7rem; font-family:'DM Mono',monospace; color:var(--neutral-400);">#1A4030</span>
+  </div>
+  <div style="display:flex; align-items:center; gap:6px;">
+    <div style="width:20px;height:20px;border-radius:4px;background:#4CAF7D;"></div>
+    <span style="font-size:0.7rem; font-family:'DM Mono',monospace; color:var(--neutral-400);">#4CAF7D accent</span>
+  </div>
+  <div style="display:flex; align-items:center; gap:6px;">
+    <div style="width:20px;height:20px;border-radius:4px;background:#C8D84B;"></div>
+    <span style="font-size:0.7rem; font-family:'DM Mono',monospace; color:var(--neutral-400);">#C8D84B accent-alt</span>
+  </div>
+  <div style="display:flex; align-items:center; gap:6px;">
+    <div style="width:20px;height:20px;border-radius:4px;background:#F8F9F7; border:1px solid #E1E5DF;"></div>
+    <span style="font-size:0.7rem; font-family:'DM Mono',monospace; color:var(--neutral-400);">#F8F9F7 bg</span>
+  </div>
+  <div style="width:1px; height:16px; background:var(--neutral-200);"></div>
+  <span style="font-size:0.7rem; color:var(--neutral-400);">DM Sans (body) · DM Mono (data) · Border-radius: 14px cards / 8px buttons</span>
+</div>
+
+<script>
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active-page');
+  document.getElementById('btn-' + name).classList.add('active');
+  // Update sidebar active state
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const map = { dashboard: 0, hacienda: 3 };
+  const items = document.querySelectorAll('.nav-item');
+  if (items[map[name]]) items[map[name]].classList.add('active');
+}
+</script>
+</body>
+</html>
