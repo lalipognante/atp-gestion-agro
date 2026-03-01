@@ -154,27 +154,40 @@ export function Sidebar() {
           role="separator"
         />
 
-        <Link
-          href="/configuracion"
-          className="flex items-center gap-2.5 px-3 py-[9px] rounded-lg text-[0.83rem] font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-          style={{ color: "#5A7D6A" }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background =
-              "rgba(255,255,255,0.05)";
-            (e.currentTarget as HTMLElement).style.color = "#9EC4B0";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "";
-            (e.currentTarget as HTMLElement).style.color = "#5A7D6A";
-          }}
-        >
-          <span className="w-1.5 h-1.5 rounded-full shrink-0" aria-hidden="true" />
-          <svg width="15" height="15" fill="none" viewBox="0 0 15 15" aria-hidden="true">
-            <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" strokeWidth="1.4" />
-            <circle cx="7.5" cy="7.5" r="2" stroke="currentColor" strokeWidth="1.4" />
-          </svg>
-          Configuración
-        </Link>
+        {(() => {
+          const isActive = pathname === "/configuracion" || pathname.startsWith("/configuracion/");
+          return (
+            <Link
+              href="/configuracion"
+              className="flex items-center gap-2.5 px-3 py-[9px] rounded-lg text-[0.83rem] font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              style={isActive ? { background: "#1A4030", color: "#D6EDE4" } : { color: "#5A7D6A" }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)";
+                  (e.currentTarget as HTMLElement).style.color = "#9EC4B0";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  (e.currentTarget as HTMLElement).style.background = "";
+                  (e.currentTarget as HTMLElement).style.color = "#5A7D6A";
+                }
+              }}
+              aria-current={isActive ? "page" : undefined}
+            >
+              <span
+                className="w-1.5 h-1.5 rounded-full shrink-0"
+                style={{ background: isActive ? "#4CAF7D" : "transparent" }}
+                aria-hidden="true"
+              />
+              <svg width="15" height="15" fill="none" viewBox="0 0 15 15" aria-hidden="true">
+                <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" strokeWidth="1.4" />
+                <circle cx="7.5" cy="7.5" r="2" stroke="currentColor" strokeWidth="1.4" />
+              </svg>
+              Configuración
+            </Link>
+          );
+        })()}
       </nav>
 
       {/* User */}

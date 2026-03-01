@@ -110,3 +110,74 @@ export interface DashboardData {
   };
   lastMovements: LastMovement[];
 }
+
+// ─── Hacienda ─────────────────────────────────────────────
+export interface HaciendaDashboard {
+  totalHeads: number;
+  byCategory: Record<string, number>;
+  totalCattleSaleIncome: number;
+}
+
+// ─── Stock (server-side full record) ──────────────────────
+export interface StockMovementRecord {
+  id: string;
+  product: string;
+  movementType: string;
+  quantity: string;
+  unit: string;
+  lotId: string | null;
+  campaignId: string | null;
+  createdAt: string;
+  campaign?: {
+    id: string;
+    year: number;
+    crop: string;
+    lot?: {
+      id: string;
+      surfaceHa: string;
+      location: string | null;
+      field?: {
+        id: string;
+        name: string;
+        type: string;
+      };
+    } | null;
+  } | null;
+}
+
+// ─── Financial (server-side full record) ──────────────────
+export interface FinancialMovementRecord {
+  id: string;
+  direction: "INCOME" | "EXPENSE";
+  category: string | null;
+  amount: string;
+  currency: "ARS" | "USD";
+  exchangeRateAtCreation: string;
+  baseCurrencyAmount: string;
+  stockMovementId: string | null;
+  campaignId: string | null;
+  createdAt: string;
+}
+
+// ─── Fields & Lots ────────────────────────────────────────
+export interface Field {
+  id: string;
+  name: string;
+  type: "PROPIO" | "ALQUILADO";
+  createdAt: string;
+}
+
+export interface Lot {
+  id: string;
+  fieldId: string;
+  surfaceHa: string;
+  location: string | null;
+  createdAt: string;
+  field?: Field;
+}
+
+// ─── Current User ─────────────────────────────────────────
+export interface CurrentUser {
+  userId: string;
+  role: "ADMIN" | "VIEWER";
+}
