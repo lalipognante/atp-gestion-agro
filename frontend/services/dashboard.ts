@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import type { DashboardData, YieldItem } from "@/types";
 
-const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:3000";
+const BACKEND_URL = process.env.BACKEND_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
 async function fetchWithAuth(path: string) {
   const token = cookies().get("atp_token")?.value;
