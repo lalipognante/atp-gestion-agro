@@ -84,9 +84,13 @@ enum PaymentMethod {
 }
 
 enum LivestockType {
-  VACA
-  FEEDLOT
   TERNERO
+  TERNERA
+  NOVILLO
+  VAQUILLONA
+  TORO
+  VACA
+  FEEDLOT // mantenido por compatibilidad con datos históricos; no se expone en la API
 }
 
 enum TreatmentType {

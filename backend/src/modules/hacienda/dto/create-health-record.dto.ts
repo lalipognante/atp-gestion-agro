@@ -1,27 +1,41 @@
 import {
-  IsEnum,
   IsInt,
-  IsPositive,
   IsNumber,
   IsString,
   IsOptional,
   IsDateString,
   IsBoolean,
+  IsPositive,
+  IsEnum,
+  Min,
+  IsIn,
 } from 'class-validator';
-import { LivestockType, TreatmentType } from '@prisma/client';
+import { TreatmentType } from '@prisma/client';
+
+// Las 6 categorías válidas de hacienda para sanidad (sin Feedlot)
+export const VALID_LIVESTOCK_TYPES = [
+  'TERNERO',
+  'TERNERA',
+  'NOVILLO',
+  'VAQUILLONA',
+  'TORO',
+  'VACA',
+] as const;
+export type ValidLivestockType = (typeof VALID_LIVESTOCK_TYPES)[number];
 
 export class CreateHealthRecordDto {
   @IsDateString()
   date: string;
 
-  @IsEnum(LivestockType)
-  livestockType: LivestockType;
+  @IsIn(VALID_LIVESTOCK_TYPES)
+  livestockType: ValidLivestockType;
 
   @IsEnum(TreatmentType)
   treatmentType: TreatmentType;
 
+  // 0 es válido cuando appliesToAll = true
   @IsInt()
-  @IsPositive()
+  @Min(0)
   quantity: number;
 
   @IsOptional()

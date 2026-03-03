@@ -102,7 +102,7 @@ export interface LastMovement {
 }
 
 // ─── Sanidad ──────────────────────────────────────────────
-export type LivestockType = "VACA" | "FEEDLOT" | "TERNERO";
+export type LivestockType = "TERNERO" | "TERNERA" | "NOVILLO" | "VAQUILLONA" | "TORO" | "VACA";
 export type TreatmentType = "VACUNA" | "BAÑO" | "DESPARASITACION" | "OTRO";
 
 export interface HealthRecord {

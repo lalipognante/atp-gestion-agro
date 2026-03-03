@@ -27,9 +27,12 @@ const CATEGORY_V2_LABEL: Record<string, string> = {
 };
 
 const LIVESTOCK_TYPE_LABEL: Record<string, string> = {
-  VACA:     "Vacas",
-  FEEDLOT:  "Feedlot",
-  TERNERO:  "Terneros",
+  TERNERO:    "Terneros",
+  TERNERA:    "Terneras",
+  NOVILLO:    "Novillos",
+  VAQUILLONA: "Vaquillonas",
+  TORO:       "Toros",
+  VACA:       "Vacas",
 };
 
 const TREATMENT_LABEL: Record<string, string> = {
