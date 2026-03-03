@@ -3,27 +3,61 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/services/api";
+import {
+  voidStockMovement,
+  voidThirdPartyWork,
+  markThirdPartyWorkPaid,
+  voidLeaseContract,
+  voidLeaseDelivery,
+  voidHealthRecord,
+} from "@/services/mutations";
+
+export type VoidAction =
+  | "stock-void"
+  | "terceros-void"
+  | "terceros-pay"
+  | "campos-contract-void"
+  | "campos-delivery-void"
+  | "hacienda-void";
+
+const MUTATION_MAP: Record<VoidAction, (id: string) => Promise<unknown>> = {
+  "stock-void":            voidStockMovement,
+  "terceros-void":         voidThirdPartyWork,
+  "terceros-pay":          markThirdPartyWorkPaid,
+  "campos-contract-void":  voidLeaseContract,
+  "campos-delivery-void":  voidLeaseDelivery,
+  "hacienda-void":         voidHealthRecord,
+};
+
+const CONFIRM_MSG: Record<VoidAction, string> = {
+  "stock-void":            "¿Confirmar anulación? Esta acción no se puede revertir.",
+  "terceros-void":         "¿Confirmar anulación? Esta acción no se puede revertir.",
+  "terceros-pay":          "¿Confirmar pago? Esta acción no se puede revertir.",
+  "campos-contract-void":  "¿Confirmar anulación del contrato? Esta acción no se puede revertir.",
+  "campos-delivery-void":  "¿Confirmar anulación de la entrega? Esta acción no se puede revertir.",
+  "hacienda-void":         "¿Confirmar anulación? Esta acción no se puede revertir.",
+};
 
 interface VoidButtonProps {
   id: string;
-  onVoid: (id: string) => Promise<unknown>;
+  action: VoidAction;
   label?: string;
 }
 
-export function VoidButton({ id, onVoid, label = "Anular" }: VoidButtonProps) {
+export function VoidButton({ id, action, label = "Anular" }: VoidButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleClick() {
-    if (!confirm("¿Confirmar anulación? Esta acción no se puede revertir.")) return;
+    if (!confirm(CONFIRM_MSG[action])) return;
     setLoading(true);
     setError(null);
     try {
-      await onVoid(id);
+      await MUTATION_MAP[action](id);
       router.refresh();
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message : "Error al anular";
+      const msg = err instanceof ApiError ? err.message : "Error al procesar";
       setError(msg);
     } finally {
       setLoading(false);
