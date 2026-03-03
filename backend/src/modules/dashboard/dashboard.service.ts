@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   FinancialDirection,
+  LivestockCategory,
   LivestockMovementType,
   ObligationStatus,
   StockMovementType,
@@ -35,9 +36,11 @@ export class DashboardService {
       monthlyFinancial,
       urgentObligations,
       upcomingObligations,
+      pendingObligationsCount,
       recentFinancial,
       allFinancialForPayments,
       latestHealthRecords,
+      recentThirdPartyWorks,
     ] = await Promise.all([
       this.prisma.stockMovement.findMany(),
       this.prisma.livestockMovement.findMany(),
@@ -52,6 +55,9 @@ export class DashboardService {
         where: { status: ObligationStatus.PENDING, dueDate: { gt: in7Days, lte: in30Days } },
         orderBy: { dueDate: 'asc' },
       }),
+      this.prisma.obligation.count({
+        where: { status: ObligationStatus.PENDING },
+      }),
       this.prisma.financialMovement.findMany({
         orderBy: { createdAt: 'desc' },
         take: 10,
@@ -64,8 +70,14 @@ export class DashboardService {
         orderBy: { date: 'desc' },
         take: 5,
       }),
+      this.prisma.thirdPartyWork.findMany({
+        orderBy: { date: 'desc' },
+        take: 5,
+        include: { lot: { include: { field: true } } },
+      }),
     ]);
 
+    // ── Stock neto granos ───────────────────────────────────
     let totalNetStock = 0;
     for (const m of allStock) {
       const qty = Number(m.quantity);
@@ -81,18 +93,32 @@ export class DashboardService {
       }
     }
 
+    // ── Hacienda: total cabezas + breakdown por categoría ───
+    const byCategory: Record<string, number> = {
+      TERNEROS: 0,
+      NOVILLOS: 0,
+      VACAS: 0,
+      TOROS: 0,
+    };
     let totalHeads = 0;
     for (const m of allLivestock) {
       const qty = m.quantity;
+      let delta = 0;
       switch (m.type) {
-        case LivestockMovementType.INCOME:    totalHeads += qty; break;
+        case LivestockMovementType.INCOME:     delta = +qty;  break;
         case LivestockMovementType.SALE:
         case LivestockMovementType.DEATH:
-        case LivestockMovementType.TRANSFER:  totalHeads -= qty; break;
-        case LivestockMovementType.ADJUSTMENT: totalHeads += qty; break;
+        case LivestockMovementType.TRANSFER:   delta = -qty;  break;
+        case LivestockMovementType.ADJUSTMENT: delta = +qty;  break;
+      }
+      totalHeads += delta;
+      if (m.category in byCategory) {
+        byCategory[m.category as LivestockCategory] =
+          (byCategory[m.category as LivestockCategory] ?? 0) + delta;
       }
     }
 
+    // ── Financiero mensual ──────────────────────────────────
     let monthlyIncome = 0, monthlyExpense = 0;
     for (const m of monthlyFinancial) {
       const amount = Number(m.baseCurrencyAmount);
@@ -100,16 +126,22 @@ export class DashboardService {
       else monthlyExpense += amount;
     }
 
-    // Aggregate totals by paymentMethod
+    // ── Pagos por método ────────────────────────────────────
     const paymentByMethod: Record<string, number> = {};
     for (const m of allFinancialForPayments) {
       if (m.paymentMethod) {
-        paymentByMethod[m.paymentMethod] = (paymentByMethod[m.paymentMethod] ?? 0) + Number(m.baseCurrencyAmount);
+        paymentByMethod[m.paymentMethod] =
+          (paymentByMethod[m.paymentMethod] ?? 0) + Number(m.baseCurrencyAmount);
       }
     }
 
-    const recentLivestock = [...allLivestock].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 10);
-    const recentStock = [...allStock].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 10);
+    // ── Últimos movimientos combinados ──────────────────────
+    const recentLivestock = [...allLivestock]
+      .sort((a, b) => b.date.getTime() - a.date.getTime())
+      .slice(0, 10);
+    const recentStock = [...allStock]
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(0, 10);
 
     const combined = [
       ...recentFinancial.map((m) => ({
@@ -127,18 +159,31 @@ export class DashboardService {
         description: `${m.movementType} · ${m.product}`,
         quantity: Number(m.quantity), unit: m.unit,
       })),
+      ...recentThirdPartyWorks.map((m) => ({
+        id: m.id, source: 'thirdPartyWork' as const, date: m.date,
+        description: `${m.workType} · ${m.contractor}`,
+        contractor: m.contractor,
+        lotLabel: m.lot?.field?.name
+          ? `${m.lot.field.name}`
+          : undefined,
+      })),
     ];
 
     combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     return {
       stock: { totalNetStock },
-      livestock: { totalHeads },
+      livestock: { totalHeads, byCategory },
       financial: { monthlyIncome, monthlyExpense, monthlyResult: monthlyIncome - monthlyExpense },
-      obligations: { urgent: urgentObligations, upcoming: upcomingObligations },
+      obligations: {
+        urgent: urgentObligations,
+        upcoming: upcomingObligations,
+        pendingCount: pendingObligationsCount,
+      },
       lastMovements: combined.slice(0, 10),
       paymentByMethod,
       latestHealthRecords,
+      recentThirdPartyWorks,
     };
   }
 

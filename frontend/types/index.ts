@@ -83,7 +83,7 @@ export interface ObligationItem {
   type: ObligationType;
 }
 
-export type MovementSource = "financial" | "livestock" | "stock";
+export type MovementSource = "financial" | "livestock" | "stock" | "thirdPartyWork";
 
 export interface LastMovement {
   id: string;
@@ -98,6 +98,9 @@ export interface LastMovement {
   quantity?: number;
   unit?: string;
   totalPrice?: number | null;
+  // thirdPartyWork
+  contractor?: string;
+  lotLabel?: string;
 }
 
 // ─── Sanidad ──────────────────────────────────────────────
@@ -130,6 +133,7 @@ export interface DashboardData {
   };
   livestock: {
     totalHeads: number;
+    byCategory: Record<string, number>;
   };
   financial: {
     monthlyIncome: number;
@@ -139,10 +143,51 @@ export interface DashboardData {
   obligations: {
     urgent: ObligationItem[];
     upcoming: ObligationItem[];
+    pendingCount: number;
   };
   lastMovements: LastMovement[];
   paymentByMethod: Record<string, number>;
   latestHealthRecords: HealthRecord[];
+  recentThirdPartyWorks: ThirdPartyWork[];
+}
+
+// ─── Third Party Works ────────────────────────────────────
+export type ThirdPartyWorkType = "SIEMBRA" | "FUMIGACION" | "COSECHA";
+
+export interface ThirdPartyWork {
+  id: string;
+  date: string;
+  workType: ThirdPartyWorkType;
+  lotId: string;
+  contractor: string;
+  paymentMethod: PaymentMethod;
+  amount: string | null;
+  currency: Currency | null;
+  quintales: string | null;
+  grainType: string | null;
+  reference: string | null;
+  notes: string | null;
+  financialMovementId: string | null;
+  createdAt: string;
+  lot?: {
+    id: string;
+    location: string | null;
+    field?: { id: string; name: string; type: string } | null;
+  };
+}
+
+export interface CreateThirdPartyWorkRequest {
+  date: string;
+  workType: ThirdPartyWorkType;
+  lotId: string;
+  contractor: string;
+  paymentMethod: PaymentMethod;
+  amount?: number;
+  currency?: Currency;
+  quintales?: number;
+  grainType?: string;
+  reference?: string;
+  notes?: string;
 }
 
 // ─── Hacienda ─────────────────────────────────────────────

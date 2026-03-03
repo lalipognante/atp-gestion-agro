@@ -10,6 +10,7 @@ import { HaciendaModule } from './modules/hacienda/hacienda.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { EmployeesModule } from './modules/employees/employees.module';
 import { PayrollModule } from './modules/payroll/payroll.module';
+import { ThirdPartyWorksModule } from './modules/third-party-works/third-party-works.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { PayrollModule } from './modules/payroll/payroll.module';
     DashboardModule,
     EmployeesModule,
     PayrollModule,
+    ThirdPartyWorksModule,
   ],
 })
 export class AppModule {}

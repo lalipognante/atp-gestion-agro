@@ -1,11 +1,13 @@
 import { getFields, getLots } from "@/services/fields";
+import { getThirdPartyWorks } from "@/services/third-party-works";
 import { Header } from "@/components/layout/Header";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { DataTable, type TableColumn } from "@/components/ui/DataTable";
 import { NuevoCampoDialog } from "@/components/forms/NuevoCampoDialog";
 import { NuevoLoteDialog } from "@/components/forms/NuevoLoteDialog";
-import { formatNumber } from "@/lib/utils";
-import type { Lot, Field } from "@/types";
+import { RegistrarLaborDialog } from "@/components/forms/RegistrarLaborDialog";
+import { formatNumber, formatDateShort, formatCurrency } from "@/lib/utils";
+import type { Lot, Field, ThirdPartyWork } from "@/types";
 
 // ─── Field type badge ──────────────────────────────────────
 function FieldTypeBadge({ type }: { type: string }) {
@@ -23,6 +25,20 @@ function FieldTypeBadge({ type }: { type: string }) {
     </span>
   );
 }
+
+const WORK_TYPE_LABEL: Record<string, string> = {
+  SIEMBRA: "Siembra",
+  FUMIGACION: "Fumigación",
+  COSECHA: "Cosecha",
+};
+
+const PAYMENT_METHOD_LABEL: Record<string, string> = {
+  CASH: "Efectivo",
+  TRANSFER: "Transferencia",
+  THIRD_PARTY_CHECK: "Cheque Tercero",
+  QUINTALES: "Quintales",
+  OTHER: "Otro",
+};
 
 const LOT_COLS: TableColumn<Lot>[] = [
   {
@@ -62,6 +78,61 @@ const LOT_COLS: TableColumn<Lot>[] = [
   },
 ];
 
+const LABOR_COLS: TableColumn<ThirdPartyWork>[] = [
+  {
+    key: "date",
+    header: "Fecha",
+    render: (row) => (
+      <span className="text-[0.75rem] text-neutral-400 font-mono">
+        {formatDateShort(row.date)}
+      </span>
+    ),
+  },
+  {
+    key: "workType",
+    header: "Tipo",
+    render: (row) => (
+      <span
+        className="text-[0.7rem] font-semibold px-2 py-0.5 rounded-full"
+        style={{ background: "#F0F4FF", color: "#3A5AA0" }}
+      >
+        {WORK_TYPE_LABEL[row.workType] ?? row.workType}
+      </span>
+    ),
+  },
+  {
+    key: "lot",
+    header: "Lote / Campo",
+    render: (row) => (
+      <span className="text-[0.82rem] text-neutral-700">
+        {row.lot?.field?.name ?? "—"}
+        {row.lot?.location ? ` · ${row.lot.location}` : ""}
+      </span>
+    ),
+  },
+  {
+    key: "contractor",
+    header: "Contratista",
+    render: (row) => (
+      <span className="font-medium text-neutral-900 text-[0.82rem]">{row.contractor}</span>
+    ),
+  },
+  {
+    key: "paymentMethod",
+    header: "Pago",
+    render: (row) => (
+      <span className="text-[0.78rem] text-neutral-600">
+        {PAYMENT_METHOD_LABEL[row.paymentMethod] ?? row.paymentMethod}
+        {row.amount
+          ? ` · ${formatCurrency(Number(row.amount), row.currency ?? "ARS")}`
+          : row.quintales
+          ? ` · ${row.quintales} qq${row.grainType ? ` ${row.grainType}` : ""}`
+          : ""}
+      </span>
+    ),
+  },
+];
+
 // ─── Error UI ─────────────────────────────────────────────
 function PageError({ message }: { message: string }) {
   return (
@@ -95,8 +166,13 @@ function PageError({ message }: { message: string }) {
 export default async function CamposPage() {
   let lots: Lot[];
   let fields: Field[];
+  let thirdPartyWorks: ThirdPartyWork[];
   try {
-    [lots, fields] = await Promise.all([getLots(), getFields()]);
+    [lots, fields, thirdPartyWorks] = await Promise.all([
+      getLots(),
+      getFields(),
+      getThirdPartyWorks(),
+    ]);
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Error de conexión con el servidor";
@@ -166,6 +242,19 @@ export default async function CamposPage() {
               rows={lots}
               getRowKey={(row) => row.id}
               emptyMessage="Sin campos ni lotes registrados"
+            />
+          </SectionCard>
+
+          {/* ── Labores de terceros ──────────────────────── */}
+          <SectionCard
+            title="Labores de Terceros"
+            actions={<RegistrarLaborDialog lots={lots} />}
+          >
+            <DataTable<ThirdPartyWork>
+              columns={LABOR_COLS}
+              rows={thirdPartyWorks}
+              getRowKey={(row) => row.id}
+              emptyMessage="Sin labores registradas"
             />
           </SectionCard>
 

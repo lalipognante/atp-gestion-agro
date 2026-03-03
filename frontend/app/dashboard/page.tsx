@@ -39,6 +39,13 @@ const TREATMENT_LABEL: Record<string, string> = {
   OTRO: "Otro",
 };
 
+const LIVESTOCK_CATEGORY_LABEL: Record<string, string> = {
+  TERNEROS: "Terneros",
+  NOVILLOS: "Novillos",
+  VACAS: "Vacas",
+  TOROS: "Toros",
+};
+
 const OBLIGATION_COLS: TableColumn<ObligationItem>[] = [
   {
     key: "concept",
@@ -196,6 +203,10 @@ export default async function DashboardPage() {
     .map(([method, total]) => ({ method, total }))
     .sort((a, b) => b.total - a.total);
 
+  // Livestock breakdown sorted by count desc
+  const byCategoryEntries = Object.entries(livestock.byCategory ?? {})
+    .sort(([, a], [, b]) => b - a);
+
   return (
     <>
       <Header
@@ -220,7 +231,7 @@ export default async function DashboardPage() {
               progress={{ value: 60, color: "#C8D84B" }}
             />
             <KpiCard
-              label="Stock Neto"
+              label="Stock Granos"
               value={`${formatNumber(stock.totalNetStock)} u`}
               trend={
                 stock.totalNetStock >= 0
@@ -233,10 +244,16 @@ export default async function DashboardPage() {
               }}
             />
             <KpiCard
-              label="Ingresos del Mes"
-              value={formatCurrency(financial.monthlyIncome)}
-              trend={{ direction: "up", label: "mes en curso" }}
-              progress={{ value: 72 }}
+              label="Obligaciones Pendientes"
+              value={String(obligations.pendingCount ?? 0)}
+              trend={{
+                direction: (obligations.pendingCount ?? 0) > 0 ? "down" : "up",
+                label: (obligations.pendingCount ?? 0) > 0 ? "por cancelar" : "al día",
+              }}
+              progress={{
+                value: Math.min(100, (obligations.pendingCount ?? 0) * 10),
+                color: (obligations.pendingCount ?? 0) > 0 ? "#E07070" : "#4CAF7D",
+              }}
             />
             <KpiCard
               label="Resultado del Mes"
@@ -254,34 +271,90 @@ export default async function DashboardPage() {
             />
           </div>
 
-          {/* ── Middle Row: Obligaciones + Actividad ────── */}
+          {/* ── Middle Row: Hacienda breakdown + Actividad ── */}
           <div
             className="grid gap-3.5"
             style={{ gridTemplateColumns: "1fr 320px" }}
           >
+            {/* Stock Hacienda con breakdown */}
             <SectionCard
-              title="Obligaciones Próximas"
+              title="Stock Hacienda"
               actions={
-                allObligations.length > 0 ? (
-                  <span className="text-[0.7rem] text-neutral-400">
-                    {obligations.urgent.length} urgente
-                    {obligations.urgent.length !== 1 ? "s" : ""}
-                  </span>
-                ) : undefined
+                <span className="text-[0.7rem] text-neutral-400">
+                  {formatNumber(livestock.totalHeads)} cabezas
+                </span>
               }
             >
-              <DataTable<ObligationItem>
-                columns={OBLIGATION_COLS}
-                rows={allObligations}
-                getRowKey={(row) => row.id}
-                emptyMessage="Sin obligaciones próximas"
-              />
+              <div className="flex flex-col gap-2.5">
+                {byCategoryEntries.length === 0 ? (
+                  <p className="text-[0.8rem] text-neutral-400 py-2 text-center">Sin registros de hacienda</p>
+                ) : (
+                  byCategoryEntries.map(([cat, count]) => {
+                    const pct = livestock.totalHeads > 0
+                      ? Math.round((count / livestock.totalHeads) * 100)
+                      : 0;
+                    const isTerneros = cat === "TERNEROS";
+                    return (
+                      <div key={cat} className="flex flex-col gap-1">
+                        <div className="flex items-center justify-between">
+                          <span
+                            className="text-[0.78rem] font-semibold"
+                            style={{ color: isTerneros ? "#C0705A" : "#374151" }}
+                          >
+                            {LIVESTOCK_CATEGORY_LABEL[cat] ?? cat}
+                            {isTerneros && (
+                              <span
+                                className="ml-1.5 text-[0.65rem] font-semibold px-1.5 py-0.5 rounded-full"
+                                style={{ background: "#FEF5F0", color: "#C0705A" }}
+                              >
+                                destacado
+                              </span>
+                            )}
+                          </span>
+                          <span className="font-mono text-[0.82rem] font-semibold text-neutral-900">
+                            {formatNumber(count)}
+                          </span>
+                        </div>
+                        <div className="rounded-full h-[5px]" style={{ background: "#F0F2EE" }}>
+                          <div
+                            className="h-[5px] rounded-full"
+                            style={{
+                              width: `${pct}%`,
+                              background: isTerneros ? "#C0705A" : "#C8D84B",
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </SectionCard>
 
             <SectionCard title="Actividad Reciente">
               <ActivityList items={lastMovements} />
             </SectionCard>
           </div>
+
+          {/* ── Obligaciones ────────────────────────────── */}
+          <SectionCard
+            title="Obligaciones Próximas"
+            actions={
+              allObligations.length > 0 ? (
+                <span className="text-[0.7rem] text-neutral-400">
+                  {obligations.urgent.length} urgente
+                  {obligations.urgent.length !== 1 ? "s" : ""}
+                </span>
+              ) : undefined
+            }
+          >
+            <DataTable<ObligationItem>
+              columns={OBLIGATION_COLS}
+              rows={allObligations}
+              getRowKey={(row) => row.id}
+              emptyMessage="Sin obligaciones próximas"
+            />
+          </SectionCard>
 
           {/* ── Bottom Row: Financiero + Pagos + Sanidad ── */}
           <div

@@ -9,6 +9,7 @@ import type {
   Employee,
   SalaryPayment,
   SalaryAdvance,
+  ThirdPartyWork,
   CreateFieldRequest,
   CreateLotRequest,
   CreateStockMovementRequest,
@@ -19,6 +20,7 @@ import type {
   CreateEmployeeRequest,
   CreateSalaryPaymentRequest,
   CreateSalaryAdvanceRequest,
+  CreateThirdPartyWorkRequest,
 } from "@/types";
 
 // ─── Fields ───────────────────────────────────────────────
@@ -80,4 +82,9 @@ export function createSalaryPayment(data: CreateSalaryPaymentRequest) {
 
 export function createSalaryAdvance(data: CreateSalaryAdvanceRequest) {
   return api.post<SalaryAdvance>("/payroll/advances", data);
+}
+
+// ─── Third Party Works ────────────────────────────────────
+export function createThirdPartyWork(data: CreateThirdPartyWorkRequest) {
+  return api.post<ThirdPartyWork>("/third-party-works", data);
 }

@@ -86,6 +86,12 @@ enum TreatmentType {
   OTRO
 }
 
+enum ThirdPartyWorkType {
+  SIEMBRA
+  FUMIGACION
+  COSECHA
+}
+
 // ───────────────── USERS ─────────────────
 
 model User {
@@ -121,9 +127,10 @@ model Lot {
   location  String?
   createdAt DateTime @default(now()) @map("created_at")
 
-  field          Field           @relation(fields: [fieldId], references: [id])
-  campaigns      Campaign[]
-  stockMovements StockMovement[]
+  field            Field              @relation(fields: [fieldId], references: [id])
+  campaigns        Campaign[]
+  stockMovements   StockMovement[]
+  thirdPartyWorks  ThirdPartyWork[]
 
   @@map("lots")
 }
@@ -277,4 +284,28 @@ model SalaryAdvance {
   employee Employee @relation(fields: [employeeId], references: [id])
 
   @@map("salary_advances")
+}
+
+// ───────────────── THIRD PARTY WORKS ─────────────────
+
+model ThirdPartyWork {
+  id                  String             @id @default(uuid())
+  date                DateTime           @db.Date
+  workType            ThirdPartyWorkType @map("work_type")
+  lotId               String             @map("lot_id")
+  contractor          String
+  paymentMethod       PaymentMethod      @map("payment_method")
+  amount              Decimal?           @db.Decimal(14, 2)
+  currency            Currency?
+  quintales           Decimal?           @db.Decimal(14, 2)
+  grainType           String?            @map("grain_type")
+  reference           String?
+  notes               String?
+  financialMovementId String?            @map("financial_movement_id")
+  createdAt           DateTime           @default(now()) @map("created_at")
+
+  lot Lot @relation(fields: [lotId], references: [id])
+
+  @@index([lotId])
+  @@map("third_party_works")
 }
