@@ -47,12 +47,15 @@ export class LeaseContractsService {
   async createDelivery(dto: CreateLeaseDeliveryDto) {
     const contract = await this.prisma.leaseContract.findUnique({
       where: { id: dto.contractId },
-      include: { deliveries: { where: { deletedAt: null } } },
+      include: {
+        field: true,
+        deliveries: { where: { deletedAt: null } },
+      },
     });
     if (!contract) throw new NotFoundException('Contract not found');
     if (contract.deletedAt) throw new BadRequestException('Contract is voided');
 
-    // Check we don't exceed total
+    // Verificar que no exceda el total del contrato
     const delivered = contract.deliveries.reduce(
       (acc, d) => acc + Number(d.quintales),
       0,
@@ -63,17 +66,20 @@ export class LeaseContractsService {
       );
     }
 
+    const autoReference = `Alquiler - ${contract.field?.name ?? 'Campo'} ${contract.year}`;
+
+    // Transacción: si falla finanzas, no se guarda la entrega
     return this.prisma.$transaction(async (tx) => {
       const fm = await tx.financialMovement.create({
         data: {
           direction: FinancialDirection.EXPENSE,
-          category: 'LEASE_PAYMENT',
+          category: 'Alquiler',
           amount: dto.amountARS,
           currency: Currency.ARS,
           exchangeRateAtCreation: 1,
           baseCurrencyAmount: dto.amountARS,
           paymentMethod: dto.paymentMethod,
-          reference: dto.reference ?? null,
+          reference: dto.reference ?? autoReference,
           notes: dto.notes
             ? `Entrega ${dto.quintales}qq | ${dto.notes}`
             : `Entrega ${dto.quintales}qq`,
@@ -88,7 +94,7 @@ export class LeaseContractsService {
           quintales: dto.quintales,
           amountARS: dto.amountARS,
           paymentMethod: dto.paymentMethod,
-          reference: dto.reference ?? null,
+          reference: dto.reference ?? autoReference,
           notes: dto.notes ?? null,
           financialMovementId: fm.id,
         },
@@ -111,9 +117,20 @@ export class LeaseContractsService {
     const d = await this.prisma.leaseDelivery.findUnique({ where: { id } });
     if (!d) throw new NotFoundException('Delivery not found');
     if (d.deletedAt) throw new BadRequestException('Already voided');
-    return this.prisma.leaseDelivery.update({
-      where: { id },
-      data: { deletedAt: new Date() },
+
+    // Transacción: anular entrega y su movimiento financiero juntos
+    return this.prisma.$transaction(async (tx) => {
+      if (d.financialMovementId) {
+        await tx.financialMovement.update({
+          where: { id: d.financialMovementId },
+          data: { deletedAt: new Date() },
+        });
+      }
+
+      return tx.leaseDelivery.update({
+        where: { id },
+        data: { deletedAt: new Date() },
+      });
     });
   }
 

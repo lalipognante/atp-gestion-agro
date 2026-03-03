@@ -6,11 +6,13 @@ import { createHealthRecord } from "@/services/mutations";
 import { ApiError } from "@/services/api";
 import type { LivestockType, TreatmentType } from "@/types";
 
-// Use LivestockType for the field (keeping existing enum for health records)
 const LIVESTOCK_TYPES: { value: LivestockType; label: string }[] = [
-  { value: "VACA", label: "Vacas" },
-  { value: "FEEDLOT", label: "Feedlot" },
   { value: "TERNERO", label: "Terneros" },
+  { value: "TERNERA", label: "Terneras" },
+  { value: "NOVILLO", label: "Novillos" },
+  { value: "VAQUILLONA", label: "Vaquillonas" },
+  { value: "TORO", label: "Toros" },
+  { value: "VACA", label: "Vacas" },
 ];
 
 const TREATMENT_TYPES: { value: TreatmentType; label: string }[] = [
