@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
   UseGuards,
   Param,
@@ -34,5 +35,17 @@ export class StockController {
   @Roles(Role.ADMIN, Role.VIEWER)
   getSummary(@Param('campaignId') campaignId: string) {
     return this.stockService.getSummary(campaignId);
+  }
+
+  @Get('net-by-product')
+  @Roles(Role.ADMIN, Role.VIEWER)
+  getNetByProduct() {
+    return this.stockService.getNetByProduct();
+  }
+
+  @Patch(':id/void')
+  @Roles(Role.ADMIN)
+  void(@Param('id') id: string) {
+    return this.stockService.void(id);
   }
 }

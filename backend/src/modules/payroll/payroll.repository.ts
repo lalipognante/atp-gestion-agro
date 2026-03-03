@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateSalaryPaymentDto } from './dto/create-salary-payment.dto';
 import { CreateSalaryAdvanceDto } from './dto/create-salary-advance.dto';
@@ -66,6 +66,7 @@ export class PayrollRepository {
 
   async findAllPayments() {
     return this.prisma.salaryPayment.findMany({
+      where: { deletedAt: null },
       orderBy: { date: 'desc' },
       include: { employee: true },
     });
@@ -73,8 +74,23 @@ export class PayrollRepository {
 
   async findAllAdvances() {
     return this.prisma.salaryAdvance.findMany({
+      where: { deletedAt: null },
       orderBy: { date: 'desc' },
       include: { employee: true },
     });
+  }
+
+  async voidPayment(id: string) {
+    const p = await this.prisma.salaryPayment.findUnique({ where: { id } });
+    if (!p) throw new NotFoundException('Payment not found');
+    if (p.deletedAt) throw new BadRequestException('Already voided');
+    return this.prisma.salaryPayment.update({ where: { id }, data: { deletedAt: new Date() } });
+  }
+
+  async voidAdvance(id: string) {
+    const a = await this.prisma.salaryAdvance.findUnique({ where: { id } });
+    if (!a) throw new NotFoundException('Advance not found');
+    if (a.deletedAt) throw new BadRequestException('Already voided');
+    return this.prisma.salaryAdvance.update({ where: { id }, data: { deletedAt: new Date() } });
   }
 }

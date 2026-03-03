@@ -13,6 +13,8 @@ const WORK_TYPE_LABELS: Record<ThirdPartyWorkType, string> = {
   SIEMBRA: "Siembra",
   FUMIGACION: "Fumigación",
   COSECHA: "Cosecha",
+  FERTILIZACION: "Fertilización",
+  MOVIMIENTO_SUELO: "Movimiento de Suelo",
 };
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {

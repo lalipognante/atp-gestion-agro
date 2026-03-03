@@ -7,11 +7,13 @@ export class StockRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateStockMovementDto) {
-    const { campaignId, lotId, pricePerUnit, date, ...rest } = dto;
+    const { campaignId, lotId, pricePerUnit, date, notes, ...rest } = dto;
 
     return this.prisma.stockMovement.create({
       data: {
         ...rest,
+        unitPrice: pricePerUnit ?? null,
+        notes: notes ?? null,
         ...(campaignId ? { campaign: { connect: { id: campaignId } } } : {}),
         ...(lotId ? { lot: { connect: { id: lotId } } } : {}),
         ...(date ? { createdAt: new Date(date) } : {}),
@@ -21,6 +23,7 @@ export class StockRepository {
 
   async findAll() {
     return this.prisma.stockMovement.findMany({
+      where: { deletedAt: null },
       include: {
         campaign: {
           include: {
@@ -32,9 +35,16 @@ export class StockRepository {
     });
   }
 
+  async findAllActive() {
+    return this.prisma.stockMovement.findMany({
+      where: { deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async findByCampaign(campaignId: string) {
     return this.prisma.stockMovement.findMany({
-      where: { campaign: { id: campaignId } },
+      where: { campaign: { id: campaignId }, deletedAt: null },
     });
   }
 

@@ -14,7 +14,6 @@ interface DataTableProps<T> {
   emptyMessage?: string;
 }
 
-// Generic table — JSX generic syntax requires explicit type parameter via wrapper
 export function DataTable<T>({
   columns,
   rows,
@@ -36,43 +35,45 @@ export function DataTable<T>({
   }
 
   return (
-    <table className="w-full border-collapse" role="table">
-      <thead>
-        <tr>
-          {columns.map((col) => (
-            <th
-              key={col.key}
-              scope="col"
-              className={[
-                "text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-neutral-400 py-[10px] px-[14px] border-b border-gray-200",
-                alignClass[col.align ?? "left"],
-              ].join(" ")}
-            >
-              {col.header}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((row, i) => (
-          <tr
-            key={getRowKey(row, i)}
-            className="border-b border-gray-50 last:border-b-0 hover:bg-neutral-50 transition-colors"
-          >
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse min-w-[500px]" role="table">
+        <thead>
+          <tr>
             {columns.map((col) => (
-              <td
+              <th
                 key={col.key}
+                scope="col"
                 className={[
-                  "py-[11px] px-[14px] text-[0.82rem] text-neutral-800",
+                  "text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-neutral-400 py-[10px] px-[14px] border-b border-gray-200 whitespace-nowrap",
                   alignClass[col.align ?? "left"],
                 ].join(" ")}
               >
-                {col.render(row, i)}
-              </td>
+                {col.header}
+              </th>
             ))}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr
+              key={getRowKey(row, i)}
+              className="border-b border-gray-50 last:border-b-0 hover:bg-neutral-50 transition-colors"
+            >
+              {columns.map((col) => (
+                <td
+                  key={col.key}
+                  className={[
+                    "py-[11px] px-[14px] text-[0.82rem] text-neutral-800",
+                    alignClass[col.align ?? "left"],
+                  ].join(" ")}
+                >
+                  {col.render(row, i)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

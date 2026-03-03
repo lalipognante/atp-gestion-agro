@@ -32,7 +32,18 @@ export class FinancialRepository {
 
   async findAll() {
     return this.prisma.financialMovement.findMany({
+      where: { deletedAt: null },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async void(id: string) {
+    const fm = await this.prisma.financialMovement.findUnique({ where: { id } });
+    if (!fm) throw new Error('Not found');
+    if (fm.deletedAt) throw new Error('Already voided');
+    return this.prisma.financialMovement.update({
+      where: { id },
+      data: { deletedAt: new Date() },
     });
   }
 }

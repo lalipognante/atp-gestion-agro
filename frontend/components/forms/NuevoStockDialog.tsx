@@ -23,6 +23,7 @@ const PRICE_REQUIRED: MovementType[] = ["SALE", "PURCHASE"];
 
 export function NuevoStockDialog({ campaigns }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +34,7 @@ export function NuevoStockDialog({ campaigns }: Props) {
     setError(null);
     setSuccess(false);
     setMovType("HARVEST");
+    formRef.current?.reset();
     dialogRef.current?.showModal();
   }
   function close() {
@@ -50,6 +52,7 @@ export function NuevoStockDialog({ campaigns }: Props) {
     const campaignId = (fd.get("campaignId") as string) || undefined;
     const pricePerUnit = fd.get("pricePerUnit") ? parseFloat(fd.get("pricePerUnit") as string) : undefined;
     const date = (fd.get("date") as string) || undefined;
+    const notes = (fd.get("notes") as string).trim() || undefined;
 
     if (!product) { setError("El producto es obligatorio"); return; }
     if (!quantity || quantity <= 0) { setError("La cantidad debe ser mayor a 0"); return; }
@@ -61,7 +64,7 @@ export function NuevoStockDialog({ campaigns }: Props) {
 
     setLoading(true);
     try {
-      await createStockMovement({ product, movementType, quantity, unit, campaignId, pricePerUnit, date });
+      await createStockMovement({ product, movementType, quantity, unit, campaignId, pricePerUnit, date, notes });
       setSuccess(true);
       router.refresh();
       setTimeout(() => close(), 700);
@@ -106,7 +109,7 @@ export function NuevoStockDialog({ campaigns }: Props) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+        <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-3.5">
           <div className="flex flex-col gap-1.5">
             <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Producto *</label>
             <input
@@ -177,6 +180,14 @@ export function NuevoStockDialog({ campaigns }: Props) {
             <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Fecha</label>
             <input
               name="date" type="date"
+              className="w-full rounded-lg px-3.5 py-2.5 text-sm border border-gray-300 bg-gray-50 text-gray-900 focus:outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Notas</label>
+            <input
+              name="notes" placeholder="Observaciones opcionales…"
               className="w-full rounded-lg px-3.5 py-2.5 text-sm border border-gray-300 bg-gray-50 text-gray-900 focus:outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500"
             />
           </div>

@@ -12,6 +12,7 @@ interface Props {
 
 export function NuevoLoteDialog({ fields }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,6 +21,7 @@ export function NuevoLoteDialog({ fields }: Props) {
   function open() {
     setError(null);
     setSuccess(false);
+    formRef.current?.reset();
     dialogRef.current?.showModal();
   }
   function close() {
@@ -80,7 +82,7 @@ export function NuevoLoteDialog({ fields }: Props) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">
               Campo *

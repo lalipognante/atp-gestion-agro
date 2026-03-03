@@ -21,11 +21,22 @@ export class ObligationsRepository {
 
   async findAll() {
     return this.prisma.obligation.findMany({
+      where: { deletedAt: null },
       orderBy: { dueDate: 'asc' },
     });
   }
 
   async findById(id: string) {
     return this.prisma.obligation.findUnique({ where: { id } });
+  }
+
+  async void(id: string) {
+    const ob = await this.prisma.obligation.findUnique({ where: { id } });
+    if (!ob) throw new Error('Not found');
+    if (ob.deletedAt) throw new Error('Already voided');
+    return this.prisma.obligation.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
   }
 }

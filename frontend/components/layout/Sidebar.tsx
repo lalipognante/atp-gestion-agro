@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import { logout } from "@/services/auth";
 
 interface NavItem {
@@ -62,23 +63,30 @@ const NAV_ITEMS: NavItem[] = [
       </svg>
     ),
   },
+  {
+    href: "/terceros",
+    label: "Terceros",
+    icon: (
+      <svg width="15" height="15" fill="none" viewBox="0 0 15 15" aria-hidden="true">
+        <path d="M7.5 1.5a3 3 0 100 6 3 3 0 000-6zM2 12.5c0-2.485 2.462-4.5 5.5-4.5s5.5 2.015 5.5 4.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        <path d="M11 8.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5M13.5 12c0-1.5-1.12-2.75-2.5-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      </svg>
+    ),
+  },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [open, setOpen] = useState(false);
 
   function handleLogout() {
     logout();
     router.push("/login");
   }
 
-  return (
-    <aside
-      className="flex flex-col w-[220px] shrink-0 min-h-screen"
-      style={{ background: "#0B2218" }}
-      aria-label="Navegación principal"
-    >
+  const navContent = (
+    <>
       {/* Logo */}
       <div className="px-5 pt-6 pb-7">
         <div className="flex items-center gap-2">
@@ -115,6 +123,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => setOpen(false)}
               className="flex items-center gap-2.5 px-3 py-[9px] rounded-lg text-[0.83rem] font-medium transition-all duration-150 no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               style={
                 isActive
@@ -123,8 +132,7 @@ export function Sidebar() {
               }
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  (e.currentTarget as HTMLElement).style.background =
-                    "rgba(255,255,255,0.05)";
+                  (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)";
                   (e.currentTarget as HTMLElement).style.color = "#9EC4B0";
                 }
               }}
@@ -159,6 +167,7 @@ export function Sidebar() {
           return (
             <Link
               href="/configuracion"
+              onClick={() => setOpen(false)}
               className="flex items-center gap-2.5 px-3 py-[9px] rounded-lg text-[0.83rem] font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               style={isActive ? { background: "#1A4030", color: "#D6EDE4" } : { color: "#5A7D6A" }}
               onMouseEnter={(e) => {
@@ -215,12 +224,8 @@ export function Sidebar() {
             onClick={handleLogout}
             className="p-1 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             style={{ color: "#2E6B52" }}
-            onMouseEnter={(e) =>
-              ((e.currentTarget as HTMLElement).style.color = "#7DC4A4")
-            }
-            onMouseLeave={(e) =>
-              ((e.currentTarget as HTMLElement).style.color = "#2E6B52")
-            }
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#7DC4A4")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "#2E6B52")}
             aria-label="Cerrar sesión"
             title="Salir"
           >
@@ -236,6 +241,51 @@ export function Sidebar() {
           </button>
         </div>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* ── Mobile hamburger ──────────────────────────── */}
+      <button
+        className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg shadow-lg"
+        style={{ background: "#0B2218", color: "#4CAF7D" }}
+        onClick={() => setOpen((v) => !v)}
+        aria-label={open ? "Cerrar menú" : "Abrir menú"}
+      >
+        {open ? (
+          <svg width="18" height="18" fill="none" viewBox="0 0 18 18">
+            <path d="M2 2l14 14M16 2L2 16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        ) : (
+          <svg width="18" height="18" fill="none" viewBox="0 0 18 18">
+            <path d="M2 5h14M2 9h14M2 13h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        )}
+      </button>
+
+      {/* ── Mobile overlay ────────────────────────────── */}
+      {open && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/50"
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* ── Sidebar (desktop: always, mobile: conditional) ─ */}
+      <aside
+        className={[
+          "flex flex-col shrink-0 min-h-screen transition-transform duration-200",
+          "fixed md:relative z-40",
+          "w-[220px]",
+          open ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+        ].join(" ")}
+        style={{ background: "#0B2218" }}
+        aria-label="Navegación principal"
+      >
+        {navContent}
+      </aside>
+    </>
   );
 }
