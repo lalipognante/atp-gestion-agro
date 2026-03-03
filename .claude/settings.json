@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(timeout 12 node dist/main.js)",
+      "Bash(docker exec atp-postgres-dev psql -U atp -d atp_agro -c \"SELECT id, date, category, type, quantity, total_price, notes FROM livestock_movements ORDER BY date DESC;\")",
+      "Bash(docker exec atp-postgres-dev psql -U atp -d atp_agro -c \"SELECT id, direction, category, amount, currency, base_currency_amount, created_at FROM financial_movements ORDER BY created_at DESC;\")",
+      "Bash(docker exec atp-postgres-dev psql -U atp -d atp_agro -c \"SELECT id, concept, amount, due_date, type, status, financial_movement_id FROM obligations ORDER BY due_date ASC;\")",
+      "Bash(docker exec atp-postgres-dev psql -U atp -d atp_agro -c \"\\\\dt\")",
+      "Bash(./node_modules/.bin/prisma db seed)",
+      "Bash(docker start atp-postgres-dev)",
+      "Bash(docker exec atp-postgres-dev psql -U atp -d atp_agro -c \":*)"
+    ]
+  }
+}

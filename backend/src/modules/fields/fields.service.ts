@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { FieldsRepository } from './fields.repository';
 import { CreateFieldDto } from './dto/create-field.dto';
+import { UpdateFieldDto } from './dto/update-field.dto';
 
 @Injectable()
 export class FieldsService {
@@ -12,5 +13,11 @@ export class FieldsService {
 
   async findAll() {
     return this.fieldsRepository.findAll();
+  }
+
+  async update(id: string, dto: UpdateFieldDto) {
+    const field = await this.fieldsRepository.findById(id);
+    if (!field) throw new NotFoundException('Field not found');
+    return this.fieldsRepository.update(id, dto);
   }
 }
