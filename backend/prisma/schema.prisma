@@ -237,3 +237,44 @@ model Obligation {
 
   @@map("obligations")
 }
+
+// ───────────────── EMPLOYEES / PAYROLL ─────────────────
+
+model Employee {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  salaryPayments SalaryPayment[]
+  salaryAdvances SalaryAdvance[]
+
+  @@map("employees")
+}
+
+model SalaryPayment {
+  id                  String   @id @default(uuid())
+  employeeId          String   @map("employee_id")
+  date                DateTime @db.Date
+  amount              Decimal  @db.Decimal(14, 2)
+  notes               String?
+  financialMovementId String?  @map("financial_movement_id")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@map("salary_payments")
+}
+
+model SalaryAdvance {
+  id                  String   @id @default(uuid())
+  employeeId          String   @map("employee_id")
+  date                DateTime @db.Date
+  amount              Decimal  @db.Decimal(14, 2)
+  notes               String?
+  financialMovementId String?  @map("financial_movement_id")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@map("salary_advances")
+}

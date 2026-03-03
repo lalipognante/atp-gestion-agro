@@ -25,7 +25,7 @@ export class FinancialRepository {
         notes: dto.notes ?? null,
         ...(dto.campaignId ? { campaignId: dto.campaignId } : {}),
         ...(dto.stockMovementId ? { stockMovementId: dto.stockMovementId } : {}),
-        ...(dto.date ? { createdAt: new Date(dto.date) } : {}),
+        createdAt: new Date(dto.date),
       },
     });
   }

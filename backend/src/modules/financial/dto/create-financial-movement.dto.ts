@@ -48,7 +48,6 @@ export class CreateFinancialMovementDto {
   @IsUUID()
   stockMovementId?: string;
 
-  @IsOptional()
   @IsDateString()
-  date?: string;
+  date: string;
 }

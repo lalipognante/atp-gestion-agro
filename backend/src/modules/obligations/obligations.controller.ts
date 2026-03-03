@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Patch, Body, Param, UseGuards } from '@nestjs/common';
 import { ObligationsService } from './obligations.service';
 import { CreateObligationDto } from './dto/create-obligation.dto';
+import { PayObligationDto } from './dto/pay-obligation.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -25,7 +26,7 @@ export class ObligationsController {
 
   @Patch(':id/pay')
   @Roles(Role.ADMIN)
-  pay(@Param('id') id: string) {
-    return this.service.pay(id);
+  pay(@Param('id') id: string, @Body() dto: PayObligationDto) {
+    return this.service.pay(id, dto.date);
   }
 }

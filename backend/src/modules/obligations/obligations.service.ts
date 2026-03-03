@@ -23,7 +23,7 @@ export class ObligationsService {
     return this.repo.findAll();
   }
 
-  async pay(id: string) {
+  async pay(id: string, date: string) {
     return this.prisma.$transaction(async (tx) => {
       const obligation = await tx.obligation.findUnique({ where: { id } });
 
@@ -43,6 +43,7 @@ export class ObligationsService {
           currency: Currency.ARS,
           exchangeRateAtCreation: 1,
           baseCurrencyAmount: obligation.amount,
+          createdAt: new Date(date),
         },
       });
 

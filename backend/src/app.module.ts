@@ -8,6 +8,8 @@ import { FinancialModule } from './modules/financial/financial.module';
 import { ObligationsModule } from './modules/obligations/obligations.module';
 import { HaciendaModule } from './modules/hacienda/hacienda.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { EmployeesModule } from './modules/employees/employees.module';
+import { PayrollModule } from './modules/payroll/payroll.module';
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     ObligationsModule,
     HaciendaModule,
     DashboardModule,
+    EmployeesModule,
+    PayrollModule,
   ],
 })
 export class AppModule {}
