@@ -3,6 +3,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { FieldsModule } from './modules/fields/fields.module';
 import { LotsModule } from './modules/lots/lots.module';
+import { CampaignsModule } from './modules/campaigns/campaigns.module';
 import { StockModule } from './modules/stock/stock.module';
 import { FinancialModule } from './modules/financial/financial.module';
 import { ObligationsModule } from './modules/obligations/obligations.module';
@@ -18,6 +19,7 @@ import { ThirdPartyWorksModule } from './modules/third-party-works/third-party-w
     AuthModule,
     FieldsModule,
     LotsModule,
+    CampaignsModule,
     StockModule,
     FinancialModule,
     ObligationsModule,
