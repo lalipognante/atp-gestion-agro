@@ -11,6 +11,12 @@ export interface LoginResponse {
 // ─── Financial ────────────────────────────────────────────
 export type Direction = "INCOME" | "EXPENSE";
 export type Currency = "ARS" | "USD";
+export type PaymentMethod =
+  | "CASH"
+  | "TRANSFER"
+  | "THIRD_PARTY_CHECK"
+  | "QUINTALES"
+  | "OTHER";
 
 export interface FinancialRecord {
   id: string;
@@ -94,6 +100,30 @@ export interface LastMovement {
   totalPrice?: number | null;
 }
 
+// ─── Sanidad ──────────────────────────────────────────────
+export type LivestockType = "VACA" | "FEEDLOT" | "TERNERO";
+export type TreatmentType = "VACUNA" | "BAÑO" | "DESPARASITACION" | "OTRO";
+
+export interface HealthRecord {
+  id: string;
+  date: string;
+  livestockType: LivestockType;
+  treatmentType: TreatmentType;
+  quantity: number;
+  cost: string | null;
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface CreateHealthRecordRequest {
+  date: string;
+  livestockType: LivestockType;
+  treatmentType: TreatmentType;
+  quantity: number;
+  cost?: number;
+  notes?: string;
+}
+
 export interface DashboardData {
   stock: {
     totalNetStock: number;
@@ -111,6 +141,8 @@ export interface DashboardData {
     upcoming: ObligationItem[];
   };
   lastMovements: LastMovement[];
+  paymentByMethod: Record<string, number>;
+  latestHealthRecords: HealthRecord[];
 }
 
 // ─── Hacienda ─────────────────────────────────────────────
@@ -168,6 +200,10 @@ export interface FinancialMovementRecord {
   currency: "ARS" | "USD";
   exchangeRateAtCreation: string;
   baseCurrencyAmount: string;
+  paymentMethod: PaymentMethod | null;
+  reference: string | null;
+  counterparty: string | null;
+  notes: string | null;
   stockMovementId: string | null;
   campaignId: string | null;
   createdAt: string;
@@ -178,6 +214,10 @@ export interface CreateFinancialMovementRequest {
   category?: string;
   amount: number;
   currency: "ARS" | "USD";
+  paymentMethod?: PaymentMethod;
+  reference?: string;
+  counterparty?: string;
+  notes?: string;
   campaignId?: string;
   stockMovementId?: string;
   date?: string;

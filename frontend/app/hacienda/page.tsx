@@ -1,10 +1,12 @@
-import { getHaciendaDashboard } from "@/services/hacienda";
+import { getHaciendaDashboard, getHealthRecords } from "@/services/hacienda";
 import { Header } from "@/components/layout/Header";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { DataTable, type TableColumn } from "@/components/ui/DataTable";
 import { NuevoHaciendaDialog } from "@/components/forms/NuevoHaciendaDialog";
-import { formatCurrency, formatNumber } from "@/lib/utils";
+import { NuevoSanidadDialog } from "@/components/forms/NuevoSanidadDialog";
+import { formatCurrency, formatNumber, formatDate } from "@/lib/utils";
+import type { HealthRecord } from "@/types";
 
 // ─── Category label map ────────────────────────────────────
 const CATEGORY_LABEL: Record<string, string> = {
@@ -12,6 +14,19 @@ const CATEGORY_LABEL: Record<string, string> = {
   NOVILLOS: "Novillos",
   VACAS: "Vacas",
   TOROS: "Toros",
+};
+
+const LIVESTOCK_TYPE_LABEL: Record<string, string> = {
+  VACA: "Vacas",
+  FEEDLOT: "Feedlot",
+  TERNERO: "Terneros",
+};
+
+const TREATMENT_LABEL: Record<string, string> = {
+  VACUNA: "Vacunación",
+  BAÑO: "Baño",
+  DESPARASITACION: "Desparasitación",
+  OTRO: "Otro",
 };
 
 interface CategoryRow {
@@ -37,6 +52,64 @@ const CATEGORY_COLS: TableColumn<CategoryRow>[] = [
       <span className="font-mono text-[0.82rem]">
         {formatNumber(row.heads)}
       </span>
+    ),
+  },
+];
+
+const HEALTH_COLS: TableColumn<HealthRecord>[] = [
+  {
+    key: "date",
+    header: "Fecha",
+    render: (row) => (
+      <span className="text-[0.75rem] text-neutral-400 font-mono">
+        {formatDate(row.date)}
+      </span>
+    ),
+  },
+  {
+    key: "livestockType",
+    header: "Categoría",
+    render: (row) => (
+      <span className="text-[0.82rem] text-neutral-700">
+        {LIVESTOCK_TYPE_LABEL[row.livestockType] ?? row.livestockType}
+      </span>
+    ),
+  },
+  {
+    key: "treatmentType",
+    header: "Tratamiento",
+    render: (row) => (
+      <span
+        className="text-[0.7rem] font-semibold px-2 py-0.5 rounded-full"
+        style={{ background: "#EEF4FF", color: "#3B5FBF" }}
+      >
+        {TREATMENT_LABEL[row.treatmentType] ?? row.treatmentType}
+      </span>
+    ),
+  },
+  {
+    key: "quantity",
+    header: "Cantidad",
+    align: "right",
+    render: (row) => (
+      <span className="font-mono text-[0.82rem]">{formatNumber(row.quantity)}</span>
+    ),
+  },
+  {
+    key: "cost",
+    header: "Costo",
+    align: "right",
+    render: (row) => (
+      <span className="font-mono text-[0.82rem] text-neutral-600">
+        {row.cost ? formatCurrency(Number(row.cost)) : "—"}
+      </span>
+    ),
+  },
+  {
+    key: "notes",
+    header: "Notas",
+    render: (row) => (
+      <span className="text-[0.75rem] text-neutral-400">{row.notes ?? "—"}</span>
     ),
   },
 ];
@@ -73,8 +146,12 @@ function PageError({ message }: { message: string }) {
 // ─── Page ─────────────────────────────────────────────────
 export default async function HaciendaPage() {
   let data;
+  let healthRecords: HealthRecord[] = [];
   try {
-    data = await getHaciendaDashboard();
+    [data, healthRecords] = await Promise.all([
+      getHaciendaDashboard(),
+      getHealthRecords(),
+    ]);
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Error de conexión con el servidor";
@@ -90,7 +167,12 @@ export default async function HaciendaPage() {
       <Header
         title="Hacienda"
         subtitle="Rodeo y movimientos ganaderos"
-        actions={<NuevoHaciendaDialog />}
+        actions={
+          <div className="flex gap-2">
+            <NuevoSanidadDialog />
+            <NuevoHaciendaDialog />
+          </div>
+        }
       />
 
       <div className="flex-1 overflow-auto">
@@ -123,27 +205,58 @@ export default async function HaciendaPage() {
               accentBorder
               valueColor={data.totalCattleSaleIncome > 0 ? "#2E6B52" : "#C0505A"}
             />
+            <KpiCard
+              label="Registros Sanitarios"
+              value={String(healthRecords.length)}
+              trend={{ direction: "up", label: "total histórico" }}
+              progress={{ value: Math.min(100, healthRecords.length * 10), color: "#3B5FBF" }}
+            />
           </div>
 
-          {/* ── By Category Table ────────────────────────── */}
-          <SectionCard
-            title="Distribución por Categoría"
-            actions={
-              categoryRows.length > 0 ? (
-                <span className="text-[0.7rem] text-neutral-400">
-                  {categoryRows.length} categoría
-                  {categoryRows.length !== 1 ? "s" : ""}
-                </span>
-              ) : undefined
-            }
+          {/* ── Middle Row: Distribución + Sanidad ───────── */}
+          <div
+            className="grid gap-3.5"
+            style={{ gridTemplateColumns: "280px 1fr" }}
           >
-            <DataTable<CategoryRow>
-              columns={CATEGORY_COLS}
-              rows={categoryRows}
-              getRowKey={(row) => row.category}
-              emptyMessage="Sin movimientos registrados"
-            />
-          </SectionCard>
+            <SectionCard
+              title="Distribución por Categoría"
+              actions={
+                categoryRows.length > 0 ? (
+                  <span className="text-[0.7rem] text-neutral-400">
+                    {categoryRows.length} categoría
+                    {categoryRows.length !== 1 ? "s" : ""}
+                  </span>
+                ) : undefined
+              }
+            >
+              <DataTable<CategoryRow>
+                columns={CATEGORY_COLS}
+                rows={categoryRows}
+                getRowKey={(row) => row.category}
+                emptyMessage="Sin movimientos registrados"
+              />
+            </SectionCard>
+
+            {/* ── Sanidad ─────────────────────────────────── */}
+            <SectionCard
+              title="Registros de Sanidad"
+              actions={
+                healthRecords.length > 0 ? (
+                  <span className="text-[0.7rem] text-neutral-400">
+                    {healthRecords.length} registro
+                    {healthRecords.length !== 1 ? "s" : ""}
+                  </span>
+                ) : undefined
+              }
+            >
+              <DataTable<HealthRecord>
+                columns={HEALTH_COLS}
+                rows={healthRecords}
+                getRowKey={(row) => row.id}
+                emptyMessage="Sin registros sanitarios"
+              />
+            </SectionCard>
+          </div>
 
         </div>
       </div>

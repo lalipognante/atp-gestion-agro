@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createFinancialMovement } from "@/services/mutations";
 import { ApiError } from "@/services/api";
-import type { Campaign } from "@/types";
+import type { Campaign, PaymentMethod } from "@/types";
 
 const CATEGORIES_BY_DIRECTION: Record<string, { value: string; label: string }[]> = {
   INCOME: [
@@ -15,14 +15,22 @@ const CATEGORIES_BY_DIRECTION: Record<string, { value: string; label: string }[]
   ],
   EXPENSE: [
     { value: "INSUMOS", label: "Insumos" },
-    { value: "MANO_DE_OBRA", label: "Mano de Obra" },
+    { value: "MANO_DE_OBRA", label: "Mano de Obra / Sueldos" },
     { value: "COMBUSTIBLE", label: "Combustible" },
-    { value: "MAQUINARIA", label: "Maquinaria / Servicios" },
+    { value: "MAQUINARIA", label: "Maquinaria / Labores Terceros" },
     { value: "OBLIGATION_RENT", label: "Alquiler" },
     { value: "OBLIGATION_CREDIT", label: "Crédito" },
     { value: "OTRO_EGRESO", label: "Otro Egreso" },
   ],
 };
+
+const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
+  { value: "CASH", label: "Efectivo" },
+  { value: "TRANSFER", label: "Transferencia" },
+  { value: "THIRD_PARTY_CHECK", label: "Cheque de Tercero" },
+  { value: "QUINTALES", label: "Quintales (Especie)" },
+  { value: "OTHER", label: "Otro" },
+];
 
 interface Props {
   campaigns: Campaign[];
@@ -54,6 +62,11 @@ export function NuevoFinancieroDialog({ campaigns }: Props) {
     const category = (fd.get("category") as string) || undefined;
     const amount = parseFloat(fd.get("amount") as string);
     const currency = fd.get("currency") as "ARS" | "USD";
+    const paymentMethodRaw = (fd.get("paymentMethod") as string) || undefined;
+    const paymentMethod = paymentMethodRaw as PaymentMethod | undefined;
+    const reference = (fd.get("reference") as string).trim() || undefined;
+    const counterparty = (fd.get("counterparty") as string).trim() || undefined;
+    const notes = (fd.get("notes") as string).trim() || undefined;
     const campaignId = (fd.get("campaignId") as string) || undefined;
     const date = (fd.get("date") as string) || undefined;
 
@@ -61,7 +74,11 @@ export function NuevoFinancieroDialog({ campaigns }: Props) {
 
     setLoading(true);
     try {
-      await createFinancialMovement({ direction: dir, category, amount, currency, campaignId, date });
+      await createFinancialMovement({
+        direction: dir, category, amount, currency,
+        paymentMethod, reference, counterparty, notes,
+        campaignId, date,
+      });
       setSuccess(true);
       router.refresh();
       setTimeout(() => close(), 700);
@@ -89,7 +106,7 @@ export function NuevoFinancieroDialog({ campaigns }: Props) {
 
       <dialog
         ref={dialogRef}
-        className="rounded-[14px] border border-gray-200 p-6 shadow-xl w-full max-w-sm backdrop:bg-black/40"
+        className="rounded-[14px] border border-gray-200 p-6 shadow-xl w-full max-w-md backdrop:bg-black/40"
       >
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-[0.95rem] font-bold text-neutral-900">Nuevo Movimiento Financiero</h2>
@@ -146,6 +163,36 @@ export function NuevoFinancieroDialog({ campaigns }: Props) {
             </div>
           </div>
 
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Método de Pago</label>
+            <select
+              name="paymentMethod"
+              className="w-full rounded-lg px-3.5 py-2.5 text-sm border border-gray-300 bg-gray-50 text-gray-900 focus:outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500"
+            >
+              <option value="">Sin especificar</option>
+              {PAYMENT_METHODS.map((m) => (
+                <option key={m.value} value={m.value}>{m.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Contraparte</label>
+              <input
+                name="counterparty" placeholder="Proveedor / persona…"
+                className="w-full rounded-lg px-3.5 py-2.5 text-sm border border-gray-300 bg-gray-50 text-gray-900 focus:outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Referencia</label>
+              <input
+                name="reference" placeholder="Nro cheque / recibo…"
+                className="w-full rounded-lg px-3.5 py-2.5 text-sm border border-gray-300 bg-gray-50 text-gray-900 focus:outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500"
+              />
+            </div>
+          </div>
+
           {campaigns.length > 0 && (
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Campaña</label>
@@ -161,12 +208,21 @@ export function NuevoFinancieroDialog({ campaigns }: Props) {
             </div>
           )}
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Fecha</label>
-            <input
-              name="date" type="date"
-              className="w-full rounded-lg px-3.5 py-2.5 text-sm border border-gray-300 bg-gray-50 text-gray-900 focus:outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Fecha</label>
+              <input
+                name="date" type="date"
+                className="w-full rounded-lg px-3.5 py-2.5 text-sm border border-gray-300 bg-gray-50 text-gray-900 focus:outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Notas</label>
+              <input
+                name="notes" placeholder="Observaciones…"
+                className="w-full rounded-lg px-3.5 py-2.5 text-sm border border-gray-300 bg-gray-50 text-gray-900 focus:outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500"
+              />
+            </div>
           </div>
 
           {error && (

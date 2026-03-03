@@ -65,6 +65,27 @@ enum ObligationStatus {
   PAID
 }
 
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  THIRD_PARTY_CHECK
+  QUINTALES
+  OTHER
+}
+
+enum LivestockType {
+  VACA
+  FEEDLOT
+  TERNERO
+}
+
+enum TreatmentType {
+  VACUNA
+  BAÑO
+  DESPARASITACION
+  OTRO
+}
+
 // ───────────────── USERS ─────────────────
 
 model User {
@@ -153,6 +174,10 @@ model FinancialMovement {
   currency               Currency
   exchangeRateAtCreation Decimal            @map("exchange_rate_at_creation") @db.Decimal(14, 6)
   baseCurrencyAmount     Decimal            @map("base_currency_amount") @db.Decimal(14, 2)
+  paymentMethod          PaymentMethod?     @map("payment_method")
+  reference              String?
+  counterparty           String?
+  notes                  String?
 
   stockMovementId String?        @map("stock_movement_id")
   stockMovement   StockMovement? @relation(fields: [stockMovementId], references: [id])
@@ -164,6 +189,7 @@ model FinancialMovement {
 
   @@index([stockMovementId])
   @@index([campaignId])
+  @@index([paymentMethod])
   @@map("financial_movements")
 }
 
@@ -180,6 +206,21 @@ model LivestockMovement {
   createdAt  DateTime              @default(now()) @map("created_at")
 
   @@map("livestock_movements")
+}
+
+// ───────────────── LIVESTOCK HEALTH RECORDS ─────────────────
+
+model LivestockHealthRecord {
+  id            String        @id @default(uuid())
+  date          DateTime      @db.Date
+  livestockType LivestockType @map("livestock_type")
+  treatmentType TreatmentType @map("treatment_type")
+  quantity      Int
+  cost          Decimal?      @db.Decimal(14, 2)
+  notes         String?
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  @@map("livestock_health_records")
 }
 
 // ───────────────── OBLIGATIONS ─────────────────

@@ -9,7 +9,6 @@ export class FinancialRepository {
 
   async create(dto: CreateFinancialMovementDto) {
     const amount = dto.amount;
-    // ARS = 1:1, USD kept as-is in baseCurrencyAmount for now
     const exchangeRate = dto.currency === Currency.USD ? 1 : 1;
 
     return this.prisma.financialMovement.create({
@@ -20,6 +19,10 @@ export class FinancialRepository {
         currency: dto.currency,
         exchangeRateAtCreation: exchangeRate,
         baseCurrencyAmount: amount,
+        paymentMethod: dto.paymentMethod ?? null,
+        reference: dto.reference ?? null,
+        counterparty: dto.counterparty ?? null,
+        notes: dto.notes ?? null,
         ...(dto.campaignId ? { campaignId: dto.campaignId } : {}),
         ...(dto.stockMovementId ? { stockMovementId: dto.stockMovementId } : {}),
         ...(dto.date ? { createdAt: new Date(dto.date) } : {}),

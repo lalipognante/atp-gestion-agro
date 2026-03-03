@@ -5,12 +5,14 @@ import type {
   StockMovementResponse,
   FinancialMovementRecord,
   ObligationItem,
+  HealthRecord,
   CreateFieldRequest,
   CreateLotRequest,
   CreateStockMovementRequest,
   CreateHaciendaMovementRequest,
   CreateFinancialMovementRequest,
   CreateObligationRequest,
+  CreateHealthRecordRequest,
 } from "@/types";
 
 // ─── Fields ───────────────────────────────────────────────
@@ -53,4 +55,9 @@ export function createObligation(data: CreateObligationRequest) {
 
 export function payObligation(id: string) {
   return api.patch<ObligationItem>(`/obligations/${id}/pay`, {});
+}
+
+// ─── Health ───────────────────────────────────────────────
+export function createHealthRecord(data: CreateHealthRecordRequest) {
+  return api.post<HealthRecord>("/hacienda/health", data);
 }

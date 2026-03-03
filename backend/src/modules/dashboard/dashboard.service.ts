@@ -36,6 +36,8 @@ export class DashboardService {
       urgentObligations,
       upcomingObligations,
       recentFinancial,
+      allFinancialForPayments,
+      latestHealthRecords,
     ] = await Promise.all([
       this.prisma.stockMovement.findMany(),
       this.prisma.livestockMovement.findMany(),
@@ -53,6 +55,14 @@ export class DashboardService {
       this.prisma.financialMovement.findMany({
         orderBy: { createdAt: 'desc' },
         take: 10,
+      }),
+      this.prisma.financialMovement.findMany({
+        where: { paymentMethod: { not: null } },
+        select: { paymentMethod: true, baseCurrencyAmount: true },
+      }),
+      this.prisma.livestockHealthRecord.findMany({
+        orderBy: { date: 'desc' },
+        take: 5,
       }),
     ]);
 
@@ -90,6 +100,14 @@ export class DashboardService {
       else monthlyExpense += amount;
     }
 
+    // Aggregate totals by paymentMethod
+    const paymentByMethod: Record<string, number> = {};
+    for (const m of allFinancialForPayments) {
+      if (m.paymentMethod) {
+        paymentByMethod[m.paymentMethod] = (paymentByMethod[m.paymentMethod] ?? 0) + Number(m.baseCurrencyAmount);
+      }
+    }
+
     const recentLivestock = [...allLivestock].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 10);
     const recentStock = [...allStock].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 10);
 
@@ -119,6 +137,8 @@ export class DashboardService {
       financial: { monthlyIncome, monthlyExpense, monthlyResult: monthlyIncome - monthlyExpense },
       obligations: { urgent: urgentObligations, upcoming: upcomingObligations },
       lastMovements: combined.slice(0, 10),
+      paymentByMethod,
+      latestHealthRecords,
     };
   }
 
@@ -138,7 +158,6 @@ export class DashboardService {
       const totalHarvested = harvests.reduce((acc, m) => acc + Number(m.quantity), 0);
       const surfaceHa = Number(campaign.lot.surfaceHa);
       const realTnHa = surfaceHa > 0 ? Math.round((totalHarvested / surfaceHa) * 100) / 100 : 0;
-      // Target: industry average by crop type (or 10% above real, min 3 tn/ha)
       const targetTnHa = realTnHa > 0
         ? Math.round(realTnHa * 1.15 * 100) / 100
         : 3.5;

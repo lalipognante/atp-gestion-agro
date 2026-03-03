@@ -23,6 +23,14 @@ function DirectionBadge({ direction }: { direction: "INCOME" | "EXPENSE" }) {
   );
 }
 
+const PAYMENT_METHOD_LABEL: Record<string, string> = {
+  CASH: "Efectivo",
+  TRANSFER: "Transferencia",
+  THIRD_PARTY_CHECK: "Cheque Terc.",
+  QUINTALES: "Quintales",
+  OTHER: "Otro",
+};
+
 const FINANCIAL_COLS: TableColumn<FinancialMovementRecord>[] = [
   {
     key: "date",
@@ -45,6 +53,22 @@ const FINANCIAL_COLS: TableColumn<FinancialMovementRecord>[] = [
       <span className="text-[0.82rem] text-neutral-600">
         {row.category ?? "—"}
       </span>
+    ),
+  },
+  {
+    key: "paymentMethod",
+    header: "Método",
+    render: (row) => (
+      <span className="text-[0.75rem] text-neutral-500">
+        {row.paymentMethod ? (PAYMENT_METHOD_LABEL[row.paymentMethod] ?? row.paymentMethod) : "—"}
+      </span>
+    ),
+  },
+  {
+    key: "counterparty",
+    header: "Contraparte",
+    render: (row) => (
+      <span className="text-[0.75rem] text-neutral-500">{row.counterparty ?? "—"}</span>
     ),
   },
   {

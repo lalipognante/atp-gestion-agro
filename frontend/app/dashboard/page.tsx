@@ -4,8 +4,8 @@ import { KpiCard } from "@/components/ui/KpiCard";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { DataTable, type TableColumn } from "@/components/ui/DataTable";
 import { ActivityList } from "@/components/ui/ActivityList";
-import { formatCurrency, formatNumber, formatDateShort } from "@/lib/utils";
-import type { ObligationItem } from "@/types";
+import { formatCurrency, formatNumber, formatDateShort, formatDate } from "@/lib/utils";
+import type { ObligationItem, HealthRecord } from "@/types";
 
 // ─── Badge helper ─────────────────────────────────────────
 function ObligationBadge({ status }: { status: ObligationItem["status"] }) {
@@ -23,6 +23,21 @@ function ObligationBadge({ status }: { status: ObligationItem["status"] }) {
     </span>
   );
 }
+
+const PAYMENT_METHOD_LABEL: Record<string, string> = {
+  CASH: "Efectivo",
+  TRANSFER: "Transferencia",
+  THIRD_PARTY_CHECK: "Cheque Tercero",
+  QUINTALES: "Quintales",
+  OTHER: "Otro",
+};
+
+const TREATMENT_LABEL: Record<string, string> = {
+  VACUNA: "Vacunación",
+  BAÑO: "Baño",
+  DESPARASITACION: "Desparasitación",
+  OTRO: "Otro",
+};
 
 const OBLIGATION_COLS: TableColumn<ObligationItem>[] = [
   {
@@ -56,6 +71,73 @@ const OBLIGATION_COLS: TableColumn<ObligationItem>[] = [
     header: "Estado",
     align: "center",
     render: (row) => <ObligationBadge status={row.status} />,
+  },
+];
+
+const HEALTH_COLS: TableColumn<HealthRecord>[] = [
+  {
+    key: "date",
+    header: "Fecha",
+    render: (row) => (
+      <span className="text-[0.75rem] text-neutral-400 font-mono">
+        {formatDate(row.date)}
+      </span>
+    ),
+  },
+  {
+    key: "treatmentType",
+    header: "Tratamiento",
+    render: (row) => (
+      <span className="text-[0.82rem] text-neutral-700">
+        {TREATMENT_LABEL[row.treatmentType] ?? row.treatmentType}
+      </span>
+    ),
+  },
+  {
+    key: "quantity",
+    header: "Cant.",
+    align: "right",
+    render: (row) => (
+      <span className="font-mono text-[0.82rem]">{formatNumber(row.quantity)}</span>
+    ),
+  },
+  {
+    key: "cost",
+    header: "Costo",
+    align: "right",
+    render: (row) => (
+      <span className="font-mono text-[0.78rem] text-neutral-500">
+        {row.cost ? formatCurrency(Number(row.cost)) : "—"}
+      </span>
+    ),
+  },
+];
+
+// ─── Payment method row ────────────────────────────────────
+interface PaymentRow {
+  method: string;
+  total: number;
+}
+
+const PAYMENT_COLS: TableColumn<PaymentRow>[] = [
+  {
+    key: "method",
+    header: "Método",
+    render: (row) => (
+      <span className="text-[0.82rem] font-medium text-neutral-800">
+        {PAYMENT_METHOD_LABEL[row.method] ?? row.method}
+      </span>
+    ),
+  },
+  {
+    key: "total",
+    header: "Total",
+    align: "right",
+    render: (row) => (
+      <span className="font-mono text-[0.82rem] font-semibold text-neutral-900">
+        {formatCurrency(row.total)}
+      </span>
+    ),
   },
 ];
 
@@ -99,12 +181,9 @@ export default async function DashboardPage() {
     return <DashboardError message={message} />;
   }
 
-  const { stock, livestock, financial, obligations, lastMovements } = data;
+  const { stock, livestock, financial, obligations, lastMovements, paymentByMethod, latestHealthRecords } = data;
 
-  // Combine urgent + upcoming obligations for the table (urgent first)
   const allObligations = [...obligations.urgent, ...obligations.upcoming];
-
-  // KPI derived values
   const monthlyResultPositive = financial.monthlyResult >= 0;
   const resultProgress = Math.min(
     100,
@@ -112,6 +191,10 @@ export default async function DashboardPage() {
       ? (financial.monthlyResult / financial.monthlyIncome) * 100
       : 0
   );
+
+  const paymentRows: PaymentRow[] = Object.entries(paymentByMethod ?? {})
+    .map(([method, total]) => ({ method, total }))
+    .sort((a, b) => b.total - a.total);
 
   return (
     <>
@@ -176,7 +259,6 @@ export default async function DashboardPage() {
             className="grid gap-3.5"
             style={{ gridTemplateColumns: "1fr 320px" }}
           >
-            {/* Obligaciones */}
             <SectionCard
               title="Obligaciones Próximas"
               actions={
@@ -196,89 +278,75 @@ export default async function DashboardPage() {
               />
             </SectionCard>
 
-            {/* Actividad reciente */}
             <SectionCard title="Actividad Reciente">
               <ActivityList items={lastMovements} />
             </SectionCard>
           </div>
 
-          {/* ── Bottom: Resumen financiero ───────────────── */}
+          {/* ── Bottom Row: Financiero + Pagos + Sanidad ── */}
           <div
             className="grid gap-3.5"
-            style={{ gridTemplateColumns: "repeat(3, 1fr)" }}
+            style={{ gridTemplateColumns: "1fr 1fr 1fr" }}
           >
-            <SectionCard title="Ingresos del Mes">
-              <div className="flex flex-col gap-1">
-                <span className="text-[1.6rem] font-bold font-mono tracking-tight text-green-600">
-                  {formatCurrency(financial.monthlyIncome)}
-                </span>
-                <span className="text-[0.72rem] text-neutral-400">
-                  Total acreditado en el período
-                </span>
-                <div
-                  className="rounded h-[5px] mt-2"
-                  style={{ background: "#F0F2EE" }}
-                >
-                  <div
-                    className="h-[5px] rounded"
-                    style={{ width: "100%", background: "#4CAF7D" }}
-                  />
+            {/* Resumen financiero */}
+            <SectionCard title="Resumen del Mes">
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[0.72rem] text-neutral-400 uppercase tracking-wide">Ingresos</span>
+                  <span className="text-[1.4rem] font-bold font-mono tracking-tight text-green-600">
+                    {formatCurrency(financial.monthlyIncome)}
+                  </span>
+                  <div className="rounded h-[4px]" style={{ background: "#F0F2EE" }}>
+                    <div className="h-[4px] rounded" style={{ width: "100%", background: "#4CAF7D" }} />
+                  </div>
                 </div>
-              </div>
-            </SectionCard>
-
-            <SectionCard title="Egresos del Mes">
-              <div className="flex flex-col gap-1">
-                <span className="text-[1.6rem] font-bold font-mono tracking-tight" style={{ color: "#E07070" }}>
-                  {formatCurrency(financial.monthlyExpense)}
-                </span>
-                <span className="text-[0.72rem] text-neutral-400">
-                  Total debitado en el período
-                </span>
-                <div
-                  className="rounded h-[5px] mt-2"
-                  style={{ background: "#F0F2EE" }}
-                >
-                  <div
-                    className="h-[5px] rounded"
-                    style={{
-                      width:
-                        financial.monthlyIncome > 0
+                <div className="flex flex-col gap-1">
+                  <span className="text-[0.72rem] text-neutral-400 uppercase tracking-wide">Egresos</span>
+                  <span className="text-[1.4rem] font-bold font-mono tracking-tight" style={{ color: "#E07070" }}>
+                    {formatCurrency(financial.monthlyExpense)}
+                  </span>
+                  <div className="rounded h-[4px]" style={{ background: "#F0F2EE" }}>
+                    <div
+                      className="h-[4px] rounded"
+                      style={{
+                        width: financial.monthlyIncome > 0
                           ? `${Math.min(100, (financial.monthlyExpense / financial.monthlyIncome) * 100)}%`
                           : "0%",
-                      background: "#E07070",
-                    }}
-                  />
+                        background: "#E07070",
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[0.72rem] text-neutral-400 uppercase tracking-wide">Resultado</span>
+                  <span
+                    className="text-[1.4rem] font-bold font-mono tracking-tight"
+                    style={{ color: monthlyResultPositive ? "#2E6B52" : "#C0505A" }}
+                  >
+                    {formatCurrency(financial.monthlyResult)}
+                  </span>
                 </div>
               </div>
             </SectionCard>
 
-            <SectionCard title="Resultado Neto">
-              <div className="flex flex-col gap-1">
-                <span
-                  className="text-[1.6rem] font-bold font-mono tracking-tight"
-                  style={{
-                    color: monthlyResultPositive ? "#2E6B52" : "#C0505A",
-                  }}
-                >
-                  {formatCurrency(financial.monthlyResult)}
-                </span>
-                <span className="text-[0.72rem] text-neutral-400">
-                  Ingresos menos egresos del mes
-                </span>
-                <div
-                  className="rounded h-[5px] mt-2"
-                  style={{ background: "#F0F2EE" }}
-                >
-                  <div
-                    className="h-[5px] rounded"
-                    style={{
-                      width: `${Math.max(0, resultProgress)}%`,
-                      background: monthlyResultPositive ? "#4CAF7D" : "#E07070",
-                    }}
-                  />
-                </div>
-              </div>
+            {/* Pagos por método */}
+            <SectionCard title="Pagos por Método">
+              <DataTable<PaymentRow>
+                columns={PAYMENT_COLS}
+                rows={paymentRows}
+                getRowKey={(row) => row.method}
+                emptyMessage="Sin pagos con método registrado"
+              />
+            </SectionCard>
+
+            {/* Últimos registros sanitarios */}
+            <SectionCard title="Últimos Registros Sanitarios">
+              <DataTable<HealthRecord>
+                columns={HEALTH_COLS}
+                rows={latestHealthRecords ?? []}
+                getRowKey={(row) => row.id}
+                emptyMessage="Sin registros sanitarios"
+              />
             </SectionCard>
           </div>
 
