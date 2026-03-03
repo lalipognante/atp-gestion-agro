@@ -23,12 +23,10 @@
       "@prisma-client": ["generated/prisma/index.ts"]
     }
   },
-  {
   "exclude": [
     "node_modules",
     "dist",
     "test",
     "**/*.spec.ts"
   ]
-}
 }
