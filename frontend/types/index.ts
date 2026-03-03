@@ -220,7 +220,7 @@ export interface CreateFinancialMovementRequest {
   notes?: string;
   campaignId?: string;
   stockMovementId?: string;
-  date?: string;
+  date: string;
 }
 
 // ─── Fields & Lots ────────────────────────────────────────
@@ -272,6 +272,53 @@ export interface CreateObligationRequest {
 export interface CurrentUser {
   userId: string;
   role: "ADMIN" | "VIEWER";
+}
+
+// ─── Employees / Payroll ──────────────────────────────────
+export interface Employee {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
+export interface SalaryPayment {
+  id: string;
+  employeeId: string;
+  date: string;
+  amount: string;
+  notes: string | null;
+  financialMovementId: string | null;
+  createdAt: string;
+  employee?: Employee;
+}
+
+export interface SalaryAdvance {
+  id: string;
+  employeeId: string;
+  date: string;
+  amount: string;
+  notes: string | null;
+  financialMovementId: string | null;
+  createdAt: string;
+  employee?: Employee;
+}
+
+export interface CreateEmployeeRequest {
+  name: string;
+}
+
+export interface CreateSalaryPaymentRequest {
+  employeeId: string;
+  date: string;
+  amount: number;
+  notes?: string;
+}
+
+export interface CreateSalaryAdvanceRequest {
+  employeeId: string;
+  date: string;
+  amount: number;
+  notes?: string;
 }
 
 // ─── Dashboard Yield ──────────────────────────────────────

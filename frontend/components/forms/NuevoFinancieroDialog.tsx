@@ -68,9 +68,10 @@ export function NuevoFinancieroDialog({ campaigns }: Props) {
     const counterparty = (fd.get("counterparty") as string).trim() || undefined;
     const notes = (fd.get("notes") as string).trim() || undefined;
     const campaignId = (fd.get("campaignId") as string) || undefined;
-    const date = (fd.get("date") as string) || undefined;
+    const date = fd.get("date") as string;
 
     if (!amount || amount <= 0) { setError("El monto debe ser mayor a 0"); return; }
+    if (!date) { setError("La fecha es obligatoria"); return; }
 
     setLoading(true);
     try {
@@ -210,9 +211,9 @@ export function NuevoFinancieroDialog({ campaigns }: Props) {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Fecha</label>
+              <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Fecha *</label>
               <input
-                name="date" type="date"
+                name="date" type="date" required
                 className="w-full rounded-lg px-3.5 py-2.5 text-sm border border-gray-300 bg-gray-50 text-gray-900 focus:outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500"
               />
             </div>

@@ -6,6 +6,9 @@ import type {
   FinancialMovementRecord,
   ObligationItem,
   HealthRecord,
+  Employee,
+  SalaryPayment,
+  SalaryAdvance,
   CreateFieldRequest,
   CreateLotRequest,
   CreateStockMovementRequest,
@@ -13,6 +16,9 @@ import type {
   CreateFinancialMovementRequest,
   CreateObligationRequest,
   CreateHealthRecordRequest,
+  CreateEmployeeRequest,
+  CreateSalaryPaymentRequest,
+  CreateSalaryAdvanceRequest,
 } from "@/types";
 
 // ─── Fields ───────────────────────────────────────────────
@@ -53,11 +59,25 @@ export function createObligation(data: CreateObligationRequest) {
   return api.post<ObligationItem>("/obligations", data);
 }
 
-export function payObligation(id: string) {
-  return api.patch<ObligationItem>(`/obligations/${id}/pay`, {});
+export function payObligation(id: string, date: string) {
+  return api.patch<ObligationItem>(`/obligations/${id}/pay`, { date });
 }
 
 // ─── Health ───────────────────────────────────────────────
 export function createHealthRecord(data: CreateHealthRecordRequest) {
   return api.post<HealthRecord>("/hacienda/health", data);
+}
+
+// ─── Employees ────────────────────────────────────────────
+export function createEmployee(data: CreateEmployeeRequest) {
+  return api.post<Employee>("/employees", data);
+}
+
+// ─── Payroll ──────────────────────────────────────────────
+export function createSalaryPayment(data: CreateSalaryPaymentRequest) {
+  return api.post<SalaryPayment>("/payroll/payments", data);
+}
+
+export function createSalaryAdvance(data: CreateSalaryAdvanceRequest) {
+  return api.post<SalaryAdvance>("/payroll/advances", data);
 }
