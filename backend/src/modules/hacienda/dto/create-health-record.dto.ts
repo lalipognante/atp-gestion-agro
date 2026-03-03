@@ -6,6 +6,7 @@ import {
   IsString,
   IsOptional,
   IsDateString,
+  IsBoolean,
 } from 'class-validator';
 import { LivestockType, TreatmentType } from '@prisma/client';
 
@@ -22,6 +23,20 @@ export class CreateHealthRecordDto {
   @IsInt()
   @IsPositive()
   quantity: number;
+
+  @IsOptional()
+  @IsBoolean()
+  appliesToAll?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @IsPositive()
+  totalCost?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @IsPositive()
+  costPerHead?: number;
 
   @IsOptional()
   @IsNumber()

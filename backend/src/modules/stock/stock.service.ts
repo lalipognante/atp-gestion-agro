@@ -16,7 +16,6 @@ export class StockService {
   ) {}
 
   async create(dto: CreateStockMovementDto) {
-    // Validate campaign if provided
     if (dto.campaignId) {
       const campaign = await this.stockRepository.campaignExists(dto.campaignId);
       if (!campaign) throw new NotFoundException('Campaign not found');
@@ -24,7 +23,6 @@ export class StockService {
 
     const qty = Number(dto.quantity);
 
-    // For SALE/INTERNAL_CONSUMPTION with campaign: validate stock
     if (dto.campaignId && (dto.movementType === 'SALE' || dto.movementType === 'INTERNAL_CONSUMPTION')) {
       const summary = await this.getSummary(dto.campaignId);
       if (qty > summary.netStock) {
@@ -36,11 +34,11 @@ export class StockService {
 
     const stockMovement = await this.stockRepository.create(dto);
 
-    // Auto-create financial movement for SALE or PURCHASE
-    if (dto.movementType === 'SALE' || dto.movementType === 'PURCHASE') {
-      if (!dto.pricePerUnit) {
-        throw new BadRequestException('pricePerUnit required for SALE or PURCHASE');
-      }
+    // Auto-create financial movement for SALE or PURCHASE only when pricePerUnit is provided
+    if (
+      (dto.movementType === 'SALE' || dto.movementType === 'PURCHASE') &&
+      dto.pricePerUnit != null
+    ) {
       const amount = qty * dto.pricePerUnit;
       await this.prisma.financialMovement.create({
         data: {
@@ -54,6 +52,7 @@ export class StockService {
           exchangeRateAtCreation: 1,
           baseCurrencyAmount: amount,
           stockMovementId: stockMovement.id,
+          notes: dto.notes ?? null,
           ...(dto.campaignId ? { campaignId: dto.campaignId } : {}),
         },
       });
@@ -66,8 +65,10 @@ export class StockService {
     return this.stockRepository.findAll();
   }
 
-  async getSummary(campaignId: string) {
-    const movements = await this.stockRepository.findByCampaign(campaignId);
+  async getSummary(campaignId?: string) {
+    const movements = campaignId
+      ? await this.stockRepository.findByCampaign(campaignId)
+      : await this.stockRepository.findAllActive();
 
     if (!movements.length) {
       return { product: null, harvest: 0, purchase: 0, sale: 0, internalConsumption: 0, adjustment: 0, netStock: 0 };
@@ -91,5 +92,38 @@ export class StockService {
       harvest, purchase, sale, internalConsumption, adjustment,
       netStock: harvest + purchase + adjustment - sale - internalConsumption,
     };
+  }
+
+  async getNetByProduct() {
+    const movements = await this.stockRepository.findAllActive();
+    const map: Record<string, { product: string; net: number; unit: string }> = {};
+
+    for (const m of movements) {
+      const qty = Number(m.quantity);
+      const prod = m.product;
+      if (!map[prod]) map[prod] = { product: prod, net: 0, unit: m.unit };
+      switch (m.movementType) {
+        case 'HARVEST':
+        case 'PURCHASE':
+          map[prod].net += qty; break;
+        case 'SALE':
+        case 'INTERNAL_CONSUMPTION':
+          map[prod].net -= qty; break;
+        case 'ADJUSTMENT':
+          map[prod].net += qty; break;
+      }
+    }
+
+    return Object.values(map);
+  }
+
+  async void(id: string) {
+    const movement = await this.prisma.stockMovement.findUnique({ where: { id } });
+    if (!movement) throw new NotFoundException('Stock movement not found');
+    if (movement.deletedAt) throw new BadRequestException('Already voided');
+    return this.prisma.stockMovement.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
   }
 }

@@ -3,23 +3,22 @@ import type { ThirdPartyWork } from "@/types";
 
 const BACKEND_URL = process.env.BACKEND_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
-export async function getThirdPartyWorks(lotId?: string): Promise<ThirdPartyWork[]> {
+async function fetchWithAuth(path: string) {
   const token = cookies().get("atp_token")?.value;
-  const url = lotId
-    ? `${BACKEND_URL}/third-party-works?lotId=${lotId}`
-    : `${BACKEND_URL}/third-party-works`;
-
-  const res = await fetch(url, {
+  return fetch(`${BACKEND_URL}${path}`, {
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     cache: "no-store",
   });
+}
 
-  if (!res.ok) {
-    throw new Error(`ThirdPartyWorks: ${res.status} ${res.statusText}`);
-  }
-
+export async function getThirdPartyWorks(providerType?: string): Promise<ThirdPartyWork[]> {
+  const url = providerType
+    ? `/third-party-works?providerType=${encodeURIComponent(providerType)}`
+    : "/third-party-works";
+  const res = await fetchWithAuth(url);
+  if (!res.ok) throw new Error(`ThirdPartyWorks: ${res.status} ${res.statusText}`);
   return res.json() as Promise<ThirdPartyWork[]>;
 }

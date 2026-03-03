@@ -39,4 +39,8 @@ export class CreateStockMovementDto {
   @IsOptional()
   @IsDateString()
   date?: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }

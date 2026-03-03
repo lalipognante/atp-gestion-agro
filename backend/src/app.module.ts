@@ -12,6 +12,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { EmployeesModule } from './modules/employees/employees.module';
 import { PayrollModule } from './modules/payroll/payroll.module';
 import { ThirdPartyWorksModule } from './modules/third-party-works/third-party-works.module';
+import { LeaseContractsModule } from './modules/lease-contracts/lease-contracts.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ThirdPartyWorksModule } from './modules/third-party-works/third-party-w
     EmployeesModule,
     PayrollModule,
     ThirdPartyWorksModule,
+    LeaseContractsModule,
   ],
 })
 export class AppModule {}

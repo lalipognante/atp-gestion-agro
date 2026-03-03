@@ -1,10 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createHaciendaMovement } from "@/services/mutations";
 import { ApiError } from "@/services/api";
-import type { LivestockMovementType, LivestockCategory } from "@/types";
+import type { LivestockMovementType, LivestockCategoryV2 } from "@/types";
 
 const MOVEMENT_TYPES: { value: LivestockMovementType; label: string }[] = [
   { value: "INCOME", label: "Ingreso" },
@@ -14,15 +14,18 @@ const MOVEMENT_TYPES: { value: LivestockMovementType; label: string }[] = [
   { value: "ADJUSTMENT", label: "Ajuste" },
 ];
 
-const CATEGORIES: { value: LivestockCategory; label: string }[] = [
-  { value: "TERNEROS", label: "Terneros" },
-  { value: "NOVILLOS", label: "Novillos" },
-  { value: "VACAS", label: "Vacas" },
-  { value: "TOROS", label: "Toros" },
+const CATEGORIES_V2: { value: LivestockCategoryV2; label: string }[] = [
+  { value: "TERNERO", label: "Ternero" },
+  { value: "TERNERA", label: "Ternera" },
+  { value: "NOVILLO", label: "Novillo" },
+  { value: "VAQUILLONA", label: "Vaquillona" },
+  { value: "TORO", label: "Toro" },
+  { value: "VACA", label: "Vaca" },
 ];
 
 export function NuevoHaciendaDialog() {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +38,7 @@ export function NuevoHaciendaDialog() {
     setError(null);
     setSuccess(false);
     setMovType("INCOME");
+    formRef.current?.reset();
     dialogRef.current?.showModal();
   }
   function close() {
@@ -46,7 +50,7 @@ export function NuevoHaciendaDialog() {
     setError(null);
     const fd = new FormData(e.currentTarget);
     const date = fd.get("date") as string;
-    const category = fd.get("category") as LivestockCategory;
+    const categoryV2 = fd.get("categoryV2") as LivestockCategoryV2;
     const type = fd.get("type") as LivestockMovementType;
     const quantity = parseInt(fd.get("quantity") as string, 10);
     const totalPriceRaw = fd.get("totalPrice") as string;
@@ -55,13 +59,10 @@ export function NuevoHaciendaDialog() {
 
     if (!date) { setError("La fecha es obligatoria"); return; }
     if (!quantity || quantity <= 0) { setError("La cantidad debe ser un entero positivo"); return; }
-    if (isSale && totalPrice !== undefined && totalPrice <= 0) {
-      setError("El precio total debe ser mayor a 0"); return;
-    }
 
     setLoading(true);
     try {
-      await createHaciendaMovement({ date, category, type, quantity, totalPrice, notes });
+      await createHaciendaMovement({ date, categoryV2, type, quantity, totalPrice, notes });
       setSuccess(true);
       router.refresh();
       setTimeout(() => close(), 700);
@@ -98,7 +99,7 @@ export function NuevoHaciendaDialog() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+        <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-3.5">
           <div className="flex flex-col gap-1.5">
             <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Fecha *</label>
             <input
@@ -123,10 +124,10 @@ export function NuevoHaciendaDialog() {
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Categoría *</label>
               <select
-                name="category" defaultValue="NOVILLOS"
+                name="categoryV2" defaultValue="VACA"
                 className="w-full rounded-lg px-3.5 py-2.5 text-sm border border-gray-300 bg-gray-50 text-gray-900 focus:outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500"
               >
-                {CATEGORIES.map((c) => (
+                {CATEGORIES_V2.map((c) => (
                   <option key={c.value} value={c.value}>{c.label}</option>
                 ))}
               </select>
@@ -159,14 +160,8 @@ export function NuevoHaciendaDialog() {
             />
           </div>
 
-          {error && (
-            <p className="text-[0.78rem] text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
-          )}
-          {success && (
-            <p className="text-[0.78rem] text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-              Movimiento registrado
-            </p>
-          )}
+          {error && <p className="text-[0.78rem] text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
+          {success && <p className="text-[0.78rem] text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">Movimiento registrado</p>}
 
           <div className="flex gap-2.5 mt-1">
             <button

@@ -48,6 +48,7 @@ export interface CreateStockMovementRequest {
   campaignId?: string;
   pricePerUnit?: number;
   date?: string;
+  notes?: string;
 }
 
 export interface StockMovementResponse {
@@ -90,15 +91,12 @@ export interface LastMovement {
   source: MovementSource;
   date: string;
   description: string;
-  // financial
   direction?: "INCOME" | "EXPENSE";
   amount?: number;
   currency?: string;
-  // livestock / stock
   quantity?: number;
   unit?: string;
   totalPrice?: number | null;
-  // thirdPartyWork
   contractor?: string;
   lotLabel?: string;
 }
@@ -113,9 +111,13 @@ export interface HealthRecord {
   livestockType: LivestockType;
   treatmentType: TreatmentType;
   quantity: number;
+  appliesToAll: boolean;
+  totalCost: string | null;
+  costPerHead: string | null;
   cost: string | null;
   notes: string | null;
   createdAt: string;
+  deletedAt: string | null;
 }
 
 export interface CreateHealthRecordRequest {
@@ -123,6 +125,9 @@ export interface CreateHealthRecordRequest {
   livestockType: LivestockType;
   treatmentType: TreatmentType;
   quantity: number;
+  appliesToAll?: boolean;
+  totalCost?: number;
+  costPerHead?: number;
   cost?: number;
   notes?: string;
 }
@@ -152,7 +157,15 @@ export interface DashboardData {
 }
 
 // ─── Third Party Works ────────────────────────────────────
-export type ThirdPartyWorkType = "SIEMBRA" | "FUMIGACION" | "COSECHA";
+export type ThirdPartyWorkType =
+  | "SIEMBRA"
+  | "FUMIGACION"
+  | "COSECHA"
+  | "FERTILIZACION"
+  | "MOVIMIENTO_SUELO";
+
+export type ProviderType = "INTERNO" | "EXTERNO";
+export type ThirdPartyWorkStatus = "PENDING" | "PAID" | "CANCELLED";
 
 export interface ThirdPartyWork {
   id: string;
@@ -167,8 +180,11 @@ export interface ThirdPartyWork {
   grainType: string | null;
   reference: string | null;
   notes: string | null;
+  providerType: ProviderType;
+  status: ThirdPartyWorkStatus;
   financialMovementId: string | null;
   createdAt: string;
+  deletedAt: string | null;
   lot?: {
     id: string;
     location: string | null;
@@ -188,6 +204,8 @@ export interface CreateThirdPartyWorkRequest {
   grainType?: string;
   reference?: string;
   notes?: string;
+  providerType?: ProviderType;
+  status?: ThirdPartyWorkStatus;
 }
 
 // ─── Hacienda ─────────────────────────────────────────────
@@ -199,10 +217,11 @@ export interface HaciendaDashboard {
 
 export type LivestockMovementType = "INCOME" | "SALE" | "DEATH" | "TRANSFER" | "ADJUSTMENT";
 export type LivestockCategory = "TERNEROS" | "NOVILLOS" | "VACAS" | "TOROS";
+export type LivestockCategoryV2 = "TERNERO" | "TERNERA" | "NOVILLO" | "VAQUILLONA" | "TORO" | "VACA";
 
 export interface CreateHaciendaMovementRequest {
   date: string;
-  category: LivestockCategory;
+  categoryV2: LivestockCategoryV2;
   type: LivestockMovementType;
   quantity: number;
   totalPrice?: number;
@@ -216,9 +235,12 @@ export interface StockMovementRecord {
   movementType: string;
   quantity: string;
   unit: string;
+  unitPrice: string | null;
+  notes: string | null;
   lotId: string | null;
   campaignId: string | null;
   createdAt: string;
+  deletedAt: string | null;
   campaign?: {
     id: string;
     year: number;
@@ -234,6 +256,12 @@ export interface StockMovementRecord {
       };
     } | null;
   } | null;
+}
+
+export interface StockNetProduct {
+  product: string;
+  net: number;
+  unit: string;
 }
 
 // ─── Financial (server-side full record) ──────────────────
@@ -252,6 +280,7 @@ export interface FinancialMovementRecord {
   stockMovementId: string | null;
   campaignId: string | null;
   createdAt: string;
+  deletedAt: string | null;
 }
 
 export interface CreateFinancialMovementRequest {
@@ -334,6 +363,7 @@ export interface SalaryPayment {
   notes: string | null;
   financialMovementId: string | null;
   createdAt: string;
+  deletedAt: string | null;
   employee?: Employee;
 }
 
@@ -345,6 +375,7 @@ export interface SalaryAdvance {
   notes: string | null;
   financialMovementId: string | null;
   createdAt: string;
+  deletedAt: string | null;
   employee?: Employee;
 }
 
@@ -372,4 +403,50 @@ export interface YieldItem {
   year: number;
   realTnHa: number;
   targetTnHa: number;
+}
+
+// ─── Lease Contracts ──────────────────────────────────────
+export interface LeaseDelivery {
+  id: string;
+  contractId: string;
+  date: string;
+  quintales: string;
+  amountARS: string;
+  paymentMethod: PaymentMethod;
+  reference: string | null;
+  notes: string | null;
+  financialMovementId: string | null;
+  createdAt: string;
+  deletedAt: string | null;
+}
+
+export interface LeaseContract {
+  id: string;
+  fieldId: string;
+  year: number;
+  totalQuintales: string;
+  notes: string | null;
+  createdAt: string;
+  deletedAt: string | null;
+  field?: Field;
+  deliveries: LeaseDelivery[];
+  deliveredQuintales?: number;
+  remainingQuintales?: number;
+}
+
+export interface CreateLeaseContractRequest {
+  fieldId: string;
+  year: number;
+  totalQuintales: number;
+  notes?: string;
+}
+
+export interface CreateLeaseDeliveryRequest {
+  contractId: string;
+  date: string;
+  quintales: number;
+  amountARS: number;
+  paymentMethod: PaymentMethod;
+  reference?: string;
+  notes?: string;
 }

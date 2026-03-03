@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateHaciendaMovementDto } from './dto/create-hacienda-movement.dto';
+import { LivestockCategory } from '@prisma/client';
 
 @Injectable()
 export class HaciendaRepository {
@@ -10,7 +11,7 @@ export class HaciendaRepository {
     return this.prisma.livestockMovement.create({
       data: {
         date: new Date(dto.date),
-        category: dto.category,
+        category: dto.category ?? LivestockCategory.VACAS,
         type: dto.type,
         quantity: dto.quantity,
         totalPrice: dto.totalPrice ?? null,
@@ -21,6 +22,7 @@ export class HaciendaRepository {
 
   async findAll() {
     return this.prisma.livestockMovement.findMany({
+      where: { deletedAt: null },
       orderBy: { date: 'desc' },
     });
   }

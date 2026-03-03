@@ -56,4 +56,14 @@ export class ObligationsService {
       });
     });
   }
+
+  async void(id: string) {
+    try {
+      return await this.repo.void(id);
+    } catch (e: any) {
+      if (e.message === 'Not found') throw new NotFoundException();
+      if (e.message === 'Already voided') throw new BadRequestException('Already voided');
+      throw e;
+    }
+  }
 }

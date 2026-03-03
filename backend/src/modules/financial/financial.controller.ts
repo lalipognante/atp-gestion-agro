@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, UseGuards, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
+  UseGuards,
+  Param,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { FinancialService } from './financial.service';
 import { CreateFinancialMovementDto } from './dto/create-financial-movement.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -27,5 +37,17 @@ export class FinancialController {
   @Roles(Role.ADMIN)
   getBalance(@Param('campaignId') campaignId: string) {
     return this.service.getBalanceByCampaign(campaignId);
+  }
+
+  @Patch(':id/void')
+  @Roles(Role.ADMIN)
+  async void(@Param('id') id: string) {
+    try {
+      return await this.service.void(id);
+    } catch (e: any) {
+      if (e.message === 'Not found') throw new NotFoundException();
+      if (e.message === 'Already voided') throw new BadRequestException('Already voided');
+      throw e;
+    }
   }
 }

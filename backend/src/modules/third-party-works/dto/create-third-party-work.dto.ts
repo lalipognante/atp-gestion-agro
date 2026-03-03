@@ -7,7 +7,13 @@ import {
   IsPositive,
   ValidateIf,
 } from 'class-validator';
-import { ThirdPartyWorkType, PaymentMethod, Currency } from '@prisma/client';
+import {
+  ThirdPartyWorkType,
+  PaymentMethod,
+  Currency,
+  ProviderType,
+  ThirdPartyWorkStatus,
+} from '@prisma/client';
 
 export class CreateThirdPartyWorkDto {
   @IsString()
@@ -53,4 +59,12 @@ export class CreateThirdPartyWorkDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsEnum(ProviderType)
+  providerType?: ProviderType;
+
+  @IsOptional()
+  @IsEnum(ThirdPartyWorkStatus)
+  status?: ThirdPartyWorkStatus;
 }

@@ -43,6 +43,16 @@ enum LivestockCategory {
   TOROS
 }
 
+// V2 — seis categorías por sexo (additive, no reemplaza LivestockCategory)
+enum LivestockCategoryV2 {
+  TERNERO
+  TERNERA
+  NOVILLO
+  VAQUILLONA
+  TORO
+  VACA
+}
+
 enum Currency {
   ARS
   USD
@@ -90,6 +100,19 @@ enum ThirdPartyWorkType {
   SIEMBRA
   FUMIGACION
   COSECHA
+  FERTILIZACION
+  MOVIMIENTO_SUELO
+}
+
+enum ProviderType {
+  INTERNO
+  EXTERNO
+}
+
+enum ThirdPartyWorkStatus {
+  PENDING
+  PAID
+  CANCELLED
 }
 
 // ───────────────── USERS ─────────────────
@@ -113,7 +136,8 @@ model Field {
   type      FieldType
   createdAt DateTime  @default(now()) @map("created_at")
 
-  lots Lot[]
+  lots           Lot[]
+  leaseContracts LeaseContract[]
 
   @@map("fields")
 }
@@ -159,15 +183,19 @@ model StockMovement {
   movementType StockMovementType @map("movement_type")
   quantity     Decimal           @db.Decimal(14, 2)
   unit         String
+  unitPrice    Decimal?          @map("unit_price") @db.Decimal(14, 2)
+  notes        String?
   lotId        String?           @map("lot_id")
   campaignId   String?           @map("campaign_id")
   createdAt    DateTime          @default(now()) @map("created_at")
+  deletedAt    DateTime?         @map("deleted_at")
 
   lot                Lot?                @relation(fields: [lotId], references: [id])
   campaign           Campaign?           @relation(fields: [campaignId], references: [id])
   financialMovements FinancialMovement[]
 
   @@index([product])
+  @@index([deletedAt])
   @@map("stock_movements")
 }
 
@@ -192,26 +220,31 @@ model FinancialMovement {
   campaignId String?   @map("campaign_id")
   campaign   Campaign? @relation(fields: [campaignId], references: [id])
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at")
 
   @@index([stockMovementId])
   @@index([campaignId])
   @@index([paymentMethod])
+  @@index([deletedAt])
   @@map("financial_movements")
 }
 
 // ───────────────── LIVESTOCK MOVEMENTS ─────────────────
 
 model LivestockMovement {
-  id         String                @id @default(uuid())
-  date       DateTime              @db.Date
-  category   LivestockCategory
-  type       LivestockMovementType
-  quantity   Int
-  totalPrice Decimal?              @map("total_price") @db.Decimal(14, 2)
-  notes      String?
-  createdAt  DateTime              @default(now()) @map("created_at")
+  id          String                @id @default(uuid())
+  date        DateTime              @db.Date
+  category    LivestockCategory
+  categoryV2  LivestockCategoryV2?  @map("category_v2")
+  type        LivestockMovementType
+  quantity    Int
+  totalPrice  Decimal?              @map("total_price") @db.Decimal(14, 2)
+  notes       String?
+  createdAt   DateTime              @default(now()) @map("created_at")
+  deletedAt   DateTime?             @map("deleted_at")
 
+  @@index([deletedAt])
   @@map("livestock_movements")
 }
 
@@ -223,10 +256,15 @@ model LivestockHealthRecord {
   livestockType LivestockType @map("livestock_type")
   treatmentType TreatmentType @map("treatment_type")
   quantity      Int
+  appliesToAll  Boolean       @default(false) @map("applies_to_all")
+  totalCost     Decimal?      @map("total_cost") @db.Decimal(14, 2)
+  costPerHead   Decimal?      @map("cost_per_head") @db.Decimal(14, 2)
   cost          Decimal?      @db.Decimal(14, 2)
   notes         String?
   createdAt     DateTime      @default(now()) @map("created_at")
+  deletedAt     DateTime?     @map("deleted_at")
 
+  @@index([deletedAt])
   @@map("livestock_health_records")
 }
 
@@ -241,7 +279,9 @@ model Obligation {
   status              ObligationStatus
   financialMovementId String?          @map("financial_movement_id")
   createdAt           DateTime         @default(now()) @map("created_at")
+  deletedAt           DateTime?        @map("deleted_at")
 
+  @@index([deletedAt])
   @@map("obligations")
 }
 
@@ -259,53 +299,100 @@ model Employee {
 }
 
 model SalaryPayment {
-  id                  String   @id @default(uuid())
-  employeeId          String   @map("employee_id")
-  date                DateTime @db.Date
-  amount              Decimal  @db.Decimal(14, 2)
+  id                  String    @id @default(uuid())
+  employeeId          String    @map("employee_id")
+  date                DateTime  @db.Date
+  amount              Decimal   @db.Decimal(14, 2)
   notes               String?
-  financialMovementId String?  @map("financial_movement_id")
-  createdAt           DateTime @default(now()) @map("created_at")
+  financialMovementId String?   @map("financial_movement_id")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  deletedAt           DateTime? @map("deleted_at")
 
   employee Employee @relation(fields: [employeeId], references: [id])
 
+  @@index([deletedAt])
   @@map("salary_payments")
 }
 
 model SalaryAdvance {
-  id                  String   @id @default(uuid())
-  employeeId          String   @map("employee_id")
-  date                DateTime @db.Date
-  amount              Decimal  @db.Decimal(14, 2)
+  id                  String    @id @default(uuid())
+  employeeId          String    @map("employee_id")
+  date                DateTime  @db.Date
+  amount              Decimal   @db.Decimal(14, 2)
   notes               String?
-  financialMovementId String?  @map("financial_movement_id")
-  createdAt           DateTime @default(now()) @map("created_at")
+  financialMovementId String?   @map("financial_movement_id")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  deletedAt           DateTime? @map("deleted_at")
 
   employee Employee @relation(fields: [employeeId], references: [id])
 
+  @@index([deletedAt])
   @@map("salary_advances")
 }
 
 // ───────────────── THIRD PARTY WORKS ─────────────────
 
 model ThirdPartyWork {
-  id                  String             @id @default(uuid())
-  date                DateTime           @db.Date
-  workType            ThirdPartyWorkType @map("work_type")
-  lotId               String             @map("lot_id")
+  id                  String               @id @default(uuid())
+  date                DateTime             @db.Date
+  workType            ThirdPartyWorkType   @map("work_type")
+  lotId               String               @map("lot_id")
   contractor          String
-  paymentMethod       PaymentMethod      @map("payment_method")
-  amount              Decimal?           @db.Decimal(14, 2)
+  paymentMethod       PaymentMethod        @map("payment_method")
+  amount              Decimal?             @db.Decimal(14, 2)
   currency            Currency?
-  quintales           Decimal?           @db.Decimal(14, 2)
-  grainType           String?            @map("grain_type")
+  quintales           Decimal?             @db.Decimal(14, 2)
+  grainType           String?              @map("grain_type")
   reference           String?
   notes               String?
-  financialMovementId String?            @map("financial_movement_id")
-  createdAt           DateTime           @default(now()) @map("created_at")
+  providerType        ProviderType         @default(EXTERNO) @map("provider_type")
+  status              ThirdPartyWorkStatus @default(PENDING)
+  financialMovementId String?              @map("financial_movement_id")
+  createdAt           DateTime             @default(now()) @map("created_at")
+  deletedAt           DateTime?            @map("deleted_at")
 
   lot Lot @relation(fields: [lotId], references: [id])
 
   @@index([lotId])
+  @@index([deletedAt])
   @@map("third_party_works")
+}
+
+// ───────────────── LEASE CONTRACTS ─────────────────
+
+model LeaseContract {
+  id             String    @id @default(uuid())
+  fieldId        String    @map("field_id")
+  year           Int
+  totalQuintales Decimal   @map("total_quintales") @db.Decimal(14, 2)
+  notes          String?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  field      Field          @relation(fields: [fieldId], references: [id])
+  deliveries LeaseDelivery[]
+
+  @@index([fieldId])
+  @@index([deletedAt])
+  @@map("lease_contracts")
+}
+
+model LeaseDelivery {
+  id                  String        @id @default(uuid())
+  contractId          String        @map("contract_id")
+  date                DateTime      @db.Date
+  quintales           Decimal       @db.Decimal(14, 2)
+  amountARS           Decimal       @map("amount_ars") @db.Decimal(14, 2)
+  paymentMethod       PaymentMethod @map("payment_method")
+  reference           String?
+  notes               String?
+  financialMovementId String?       @map("financial_movement_id")
+  createdAt           DateTime      @default(now()) @map("created_at")
+  deletedAt           DateTime?     @map("deleted_at")
+
+  contract LeaseContract @relation(fields: [contractId], references: [id])
+
+  @@index([contractId])
+  @@index([deletedAt])
+  @@map("lease_deliveries")
 }

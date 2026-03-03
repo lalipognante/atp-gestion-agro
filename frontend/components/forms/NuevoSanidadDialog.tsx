@@ -6,6 +6,7 @@ import { createHealthRecord } from "@/services/mutations";
 import { ApiError } from "@/services/api";
 import type { LivestockType, TreatmentType } from "@/types";
 
+// Use LivestockType for the field (keeping existing enum for health records)
 const LIVESTOCK_TYPES: { value: LivestockType; label: string }[] = [
   { value: "VACA", label: "Vacas" },
   { value: "FEEDLOT", label: "Feedlot" },
@@ -21,14 +22,18 @@ const TREATMENT_TYPES: { value: TreatmentType; label: string }[] = [
 
 export function NuevoSanidadDialog() {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [appliesToAll, setAppliesToAll] = useState(false);
 
   function open() {
     setError(null);
     setSuccess(false);
+    setAppliesToAll(false);
+    formRef.current?.reset();
     dialogRef.current?.showModal();
   }
   function close() {
@@ -42,17 +47,30 @@ export function NuevoSanidadDialog() {
     const date = fd.get("date") as string;
     const livestockType = fd.get("livestockType") as LivestockType;
     const treatmentType = fd.get("treatmentType") as TreatmentType;
-    const quantity = parseInt(fd.get("quantity") as string, 10);
-    const costRaw = fd.get("cost") as string;
-    const cost = costRaw ? parseFloat(costRaw) : undefined;
+    const quantity = parseInt(fd.get("quantity") as string, 10) || 0;
+    const totalCostRaw = fd.get("totalCost") as string;
+    const costPerHeadRaw = fd.get("costPerHead") as string;
+    const totalCost = totalCostRaw ? parseFloat(totalCostRaw) : undefined;
+    const costPerHead = costPerHeadRaw ? parseFloat(costPerHeadRaw) : undefined;
     const notes = (fd.get("notes") as string).trim() || undefined;
 
     if (!date) { setError("La fecha es obligatoria"); return; }
-    if (!quantity || quantity <= 0) { setError("La cantidad debe ser un entero positivo"); return; }
+    if (!appliesToAll && (!quantity || quantity <= 0)) {
+      setError("La cantidad debe ser un entero positivo"); return;
+    }
 
     setLoading(true);
     try {
-      await createHealthRecord({ date, livestockType, treatmentType, quantity, cost, notes });
+      await createHealthRecord({
+        date,
+        livestockType,
+        treatmentType,
+        quantity: appliesToAll ? 0 : quantity,
+        appliesToAll,
+        totalCost,
+        costPerHead,
+        notes,
+      });
       setSuccess(true);
       router.refresh();
       setTimeout(() => close(), 700);
@@ -89,7 +107,7 @@ export function NuevoSanidadDialog() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+        <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-3.5">
           <div className="flex flex-col gap-1.5">
             <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Fecha *</label>
             <input
@@ -123,18 +141,39 @@ export function NuevoSanidadDialog() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          {/* Applies to all toggle */}
+          <label className="flex items-center gap-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={appliesToAll}
+              onChange={(e) => setAppliesToAll(e.target.checked)}
+              className="w-4 h-4 accent-blue-600"
+            />
+            <span className="text-[0.82rem] text-neutral-700">Aplica a TODOS el rodeo</span>
+          </label>
+
+          {!appliesToAll && (
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Cantidad *</label>
               <input
-                name="quantity" type="number" min="1" step="1" required placeholder="0"
+                name="quantity" type="number" min="1" step="1" required={!appliesToAll} placeholder="0"
+                className="w-full rounded-lg px-3.5 py-2.5 text-sm border border-gray-300 bg-gray-50 text-gray-900 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Costo Total (ARS)</label>
+              <input
+                name="totalCost" type="number" step="0.01" min="0" placeholder="0.00"
                 className="w-full rounded-lg px-3.5 py-2.5 text-sm border border-gray-300 bg-gray-50 text-gray-900 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Costo (ARS)</label>
+              <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Por Cabeza (ARS)</label>
               <input
-                name="cost" type="number" step="0.01" min="0" placeholder="0.00"
+                name="costPerHead" type="number" step="0.01" min="0" placeholder="0.00"
                 className="w-full rounded-lg px-3.5 py-2.5 text-sm border border-gray-300 bg-gray-50 text-gray-900 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500"
               />
             </div>
@@ -148,14 +187,8 @@ export function NuevoSanidadDialog() {
             />
           </div>
 
-          {error && (
-            <p className="text-[0.78rem] text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
-          )}
-          {success && (
-            <p className="text-[0.78rem] text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-              Registro guardado
-            </p>
-          )}
+          {error && <p className="text-[0.78rem] text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
+          {success && <p className="text-[0.78rem] text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">Registro guardado</p>}
 
           <div className="flex gap-2.5 mt-1">
             <button

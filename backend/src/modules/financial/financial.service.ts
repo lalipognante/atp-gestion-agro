@@ -21,7 +21,7 @@ export class FinancialService {
 
   async getBalanceByCampaign(campaignId: string) {
     const movements = await this.prisma.financialMovement.findMany({
-      where: { campaignId },
+      where: { campaignId, deletedAt: null },
     });
 
     let income = 0;
@@ -36,5 +36,9 @@ export class FinancialService {
     }
 
     return { income, expense, balance: income - expense };
+  }
+
+  async void(id: string) {
+    return this.repo.void(id);
   }
 }

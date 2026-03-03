@@ -29,4 +29,10 @@ export class ObligationsController {
   pay(@Param('id') id: string, @Body() dto: PayObligationDto) {
     return this.service.pay(id, dto.date);
   }
+
+  @Patch(':id/void')
+  @Roles(Role.ADMIN)
+  void(@Param('id') id: string) {
+    return this.service.void(id);
+  }
 }
