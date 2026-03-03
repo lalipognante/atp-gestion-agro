@@ -5,6 +5,8 @@ const BACKEND_URL = process.env.BACKEND_URL ?? process.env.NEXT_PUBLIC_API_URL ?
 
 async function fetchWithAuth(path: string) {
   const token = cookies().get("atp_token")?.value;
+  console.log("SERVER TOKEN:", token);
+  console.log("SERVER BACKEND_URL:", BACKEND_URL);
   return fetch(`${BACKEND_URL}${path}`, {
     headers: {
       "Content-Type": "application/json",
