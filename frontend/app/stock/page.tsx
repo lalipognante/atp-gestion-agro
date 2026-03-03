@@ -7,7 +7,6 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { DataTable, type TableColumn } from "@/components/ui/DataTable";
 import { NuevoStockDialog } from "@/components/forms/NuevoStockDialog";
 import { VoidButton } from "@/components/forms/VoidButton";
-import { voidStockMovement } from "@/services/mutations";
 import { formatNumber, formatDate } from "@/lib/utils";
 import type { StockMovementRecord, StockNetProduct } from "@/types";
 
@@ -102,7 +101,7 @@ const STOCK_COLS: TableColumn<StockMovementRecord>[] = [
       row.deletedAt ? (
         <span className="text-[0.68rem] text-neutral-400 italic">Anulado</span>
       ) : (
-        <VoidButton id={row.id} onVoid={voidStockMovement} />
+        <VoidButton id={row.id} action="stock-void" />
       ),
   },
 ];

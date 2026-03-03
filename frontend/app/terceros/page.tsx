@@ -7,7 +7,6 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { DataTable, type TableColumn } from "@/components/ui/DataTable";
 import { RegistrarLaborDialog } from "@/components/forms/RegistrarLaborDialog";
 import { VoidButton } from "@/components/forms/VoidButton";
-import { markThirdPartyWorkPaid, voidThirdPartyWork } from "@/services/mutations";
 import { formatNumber, formatDateShort, formatCurrency } from "@/lib/utils";
 import type { ThirdPartyWork, Lot } from "@/types";
 
@@ -116,9 +115,9 @@ const LABOR_COLS: TableColumn<ThirdPartyWork>[] = [
       return (
         <div className="flex gap-1.5">
           {row.status === "PENDING" && (
-            <VoidButton id={row.id} onVoid={markThirdPartyWorkPaid} label="Pagar" />
+            <VoidButton id={row.id} action="terceros-pay" label="Pagar" />
           )}
-          <VoidButton id={row.id} onVoid={voidThirdPartyWork} label="Anular" />
+          <VoidButton id={row.id} action="terceros-void" label="Anular" />
         </div>
       );
     },

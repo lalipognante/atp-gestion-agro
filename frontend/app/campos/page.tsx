@@ -10,7 +10,6 @@ import { NuevoLoteDialog } from "@/components/forms/NuevoLoteDialog";
 import { NuevoContratoDialog } from "@/components/forms/NuevoContratoDialog";
 import { RegistrarEntregaDialog } from "@/components/forms/RegistrarEntregaDialog";
 import { VoidButton } from "@/components/forms/VoidButton";
-import { voidLeaseDelivery, voidLeaseContract } from "@/services/mutations";
 import { formatNumber, formatDateShort, formatCurrency } from "@/lib/utils";
 import type { Lot, Field, LeaseContract, LeaseDelivery } from "@/types";
 
@@ -163,7 +162,7 @@ function LeaseSection({ contracts, fields }: { contracts: LeaseContract[]; field
                   d.deletedAt ? (
                     <span className="text-[0.68rem] text-neutral-400 italic">Anulada</span>
                   ) : (
-                    <VoidButton id={d.id} onVoid={voidLeaseDelivery} />
+                    <VoidButton id={d.id} action="campos-delivery-void" />
                   ),
               },
             ];
@@ -182,7 +181,7 @@ function LeaseSection({ contracts, fields }: { contracts: LeaseContract[]; field
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {!c.deletedAt && <RegistrarEntregaDialog contractId={c.id} />}
-                    {!c.deletedAt && <VoidButton id={c.id} onVoid={voidLeaseContract} label="Anular Contrato" />}
+                    {!c.deletedAt && <VoidButton id={c.id} action="campos-contract-void" label="Anular Contrato" />}
                     {c.deletedAt && <span className="text-[0.72rem] text-red-400 italic">Anulado</span>}
                   </div>
                 </div>

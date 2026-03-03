@@ -8,7 +8,6 @@ import { DataTable, type TableColumn } from "@/components/ui/DataTable";
 import { NuevoHaciendaDialog } from "@/components/forms/NuevoHaciendaDialog";
 import { NuevoSanidadDialog } from "@/components/forms/NuevoSanidadDialog";
 import { VoidButton } from "@/components/forms/VoidButton";
-import { voidHealthRecord } from "@/services/mutations";
 import { formatCurrency, formatNumber, formatDate } from "@/lib/utils";
 import type { HealthRecord } from "@/types";
 
@@ -143,7 +142,7 @@ const HEALTH_COLS: TableColumn<HealthRecord>[] = [
       row.deletedAt ? (
         <span className="text-[0.68rem] text-neutral-400 italic">Anulado</span>
       ) : (
-        <VoidButton id={row.id} onVoid={voidHealthRecord} />
+        <VoidButton id={row.id} action="hacienda-void" />
       ),
   },
 ];
