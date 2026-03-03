@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getStockMovements } from "@/services/stockMovements";
 import { getCampaigns } from "@/services/campaigns";
 import { Header } from "@/components/layout/Header";

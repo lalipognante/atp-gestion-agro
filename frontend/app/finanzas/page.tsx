@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getFinancialMovements } from "@/services/financialMovements";
 import { getObligations } from "@/services/obligations";
 import { getEmployees, getSalaryPayments, getSalaryAdvances } from "@/services/employees";

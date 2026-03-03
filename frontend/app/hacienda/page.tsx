@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getHaciendaDashboard, getHealthRecords } from "@/services/hacienda";
 import { Header } from "@/components/layout/Header";
 import { KpiCard } from "@/components/ui/KpiCard";

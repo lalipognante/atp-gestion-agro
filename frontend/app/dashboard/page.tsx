@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getDashboardData } from "@/services/dashboard";
 import { Header } from "@/components/layout/Header";
 import { KpiCard } from "@/components/ui/KpiCard";

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getFields, getLots } from "@/services/fields";
 import { getThirdPartyWorks } from "@/services/third-party-works";
 import { Header } from "@/components/layout/Header";
