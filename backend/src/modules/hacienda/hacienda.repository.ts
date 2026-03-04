@@ -13,7 +13,7 @@ export class HaciendaRepository {
         date: new Date(dto.date),
         category: dto.category ?? LivestockCategory.VACAS,
         type: dto.type,
-        quantity: dto.quantity,
+        quantity: dto.quantity ?? 0,
         totalPrice: dto.totalPrice ?? null,
         notes: dto.notes ?? null,
       },

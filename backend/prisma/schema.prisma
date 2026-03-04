@@ -30,6 +30,7 @@ enum StockMovementType {
 
 enum LivestockMovementType {
   INCOME
+  PURCHASE
   SALE
   DEATH
   TRANSFER
@@ -238,19 +239,37 @@ model FinancialMovement {
 // ───────────────── LIVESTOCK MOVEMENTS ─────────────────
 
 model LivestockMovement {
-  id          String                @id @default(uuid())
-  date        DateTime              @db.Date
-  category    LivestockCategory
-  categoryV2  LivestockCategoryV2?  @map("category_v2")
-  type        LivestockMovementType
-  quantity    Int
-  totalPrice  Decimal?              @map("total_price") @db.Decimal(14, 2)
-  notes       String?
-  createdAt   DateTime              @default(now()) @map("created_at")
-  deletedAt   DateTime?             @map("deleted_at")
+  id            String                @id @default(uuid())
+  date          DateTime              @db.Date
+  category      LivestockCategory
+  categoryV2    LivestockCategoryV2?  @map("category_v2")
+  type          LivestockMovementType
+  quantity      Int
+  totalPrice    Decimal?              @map("total_price") @db.Decimal(14, 2)
+  avgWeightKg   Decimal?              @map("avg_weight_kg") @db.Decimal(10, 3)
+  pricePerKg    Decimal?              @map("price_per_kg") @db.Decimal(14, 2)
+  totalWeightKg Decimal?              @map("total_weight_kg") @db.Decimal(14, 3)
+  totalAmount   Decimal?              @map("total_amount") @db.Decimal(14, 2)
+  notes         String?
+  createdAt     DateTime              @default(now()) @map("created_at")
+  deletedAt     DateTime?             @map("deleted_at")
+
+  items LivestockMovementItem[]
 
   @@index([deletedAt])
   @@map("livestock_movements")
+}
+
+model LivestockMovementItem {
+  id         String              @id @default(uuid())
+  movementId String              @map("movement_id")
+  category   LivestockCategoryV2
+  quantity   Int
+
+  movement LivestockMovement @relation(fields: [movementId], references: [id])
+
+  @@index([movementId])
+  @@map("livestock_movement_items")
 }
 
 // ───────────────── LIVESTOCK HEALTH RECORDS ─────────────────

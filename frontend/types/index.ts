@@ -215,15 +215,26 @@ export interface HaciendaDashboard {
   totalCattleSaleIncome: number;
 }
 
-export type LivestockMovementType = "INCOME" | "SALE" | "DEATH" | "TRANSFER" | "ADJUSTMENT";
+export type LivestockMovementType = "INCOME" | "PURCHASE" | "SALE" | "DEATH" | "TRANSFER" | "ADJUSTMENT";
 export type LivestockCategory = "TERNEROS" | "NOVILLOS" | "VACAS" | "TOROS";
 export type LivestockCategoryV2 = "TERNERO" | "TERNERA" | "NOVILLO" | "VAQUILLONA" | "TORO" | "VACA";
 
+export interface LivestockMovementItemInput {
+  category: LivestockCategoryV2;
+  quantity: number;
+}
+
 export interface CreateHaciendaMovementRequest {
   date: string;
-  categoryV2: LivestockCategoryV2;
   type: LivestockMovementType;
-  quantity: number;
+  // SALE / PURCHASE con cálculo por kilo
+  avgWeightKg?: number;
+  pricePerKg?: number;
+  totalAmount?: number;
+  items?: LivestockMovementItemInput[];
+  // Legacy: INCOME / DEATH / TRANSFER / ADJUSTMENT
+  categoryV2?: LivestockCategoryV2;
+  quantity?: number;
   totalPrice?: number;
   notes?: string;
 }

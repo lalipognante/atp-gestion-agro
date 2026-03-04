@@ -22,6 +22,17 @@ const SOURCE_LABEL: Record<LastMovement["source"], string> = {
   thirdPartyWork: "Labor",
 };
 
+// Mapeo de categorías técnicas a labels amigables para Finanzas
+const FINANCIAL_CATEGORY_LABEL: Record<string, string> = {
+  STOCK_SALE:       "Venta de Hacienda",
+  STOCK_PURCHASE:   "Compra de Hacienda",
+  CATTLE_SALE:      "Venta de Hacienda",
+  THIRD_PARTY_WORK: "Labor contratada",
+  LABOR_INTERNA:    "Labor propia",
+  SANIDAD:          "Sanidad",
+  Alquiler:         "Alquiler",
+};
+
 function ActivityIcon({ source }: { source: LastMovement["source"] }) {
   if (source === "financial") {
     return (
@@ -55,9 +66,19 @@ function ActivityIcon({ source }: { source: LastMovement["source"] }) {
   );
 }
 
+function getFriendlyDescription(item: LastMovement): string {
+  if (item.source === "financial") {
+    return FINANCIAL_CATEGORY_LABEL[item.description] ?? item.description;
+  }
+  return item.description;
+}
+
 function formatMovementDetail(item: LastMovement): string {
   if (item.source === "financial" && item.amount != null && item.currency) {
     return formatCurrency(item.amount, item.currency as "ARS" | "USD");
+  }
+  if (item.source === "livestock" && item.totalPrice != null && item.totalPrice > 0) {
+    return formatCurrency(item.totalPrice);
   }
   if (item.quantity != null) {
     return `${item.quantity.toLocaleString("es-AR")}${item.unit ? " " + item.unit : ""}`;
@@ -78,6 +99,7 @@ export function ActivityList({ items }: ActivityListProps) {
     <ul className="flex flex-col" role="list">
       {items.map((item, i) => {
         const style = SOURCE_STYLES[item.source];
+        const description = getFriendlyDescription(item);
         const detail = formatMovementDetail(item);
         const isLast = i === items.length - 1;
 
@@ -101,7 +123,7 @@ export function ActivityList({ items }: ActivityListProps) {
             {/* Text */}
             <div className="flex-1 min-w-0">
               <div className="text-[0.8rem] font-semibold text-neutral-900 truncate">
-                {item.description}
+                {description}
               </div>
               <div className="text-[0.7rem] text-neutral-400 flex items-center gap-1.5 mt-0.5">
                 <span>{SOURCE_LABEL[item.source]}</span>

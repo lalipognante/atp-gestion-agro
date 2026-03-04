@@ -28,16 +28,73 @@ export class HaciendaService {
   ) {}
 
   async create(dto: CreateHaciendaMovementDto) {
-    // Resolve category: use V2 mapping if provided, fallback to legacy
+    const isSalePurchase =
+      dto.type === LivestockMovementType.SALE ||
+      dto.type === LivestockMovementType.PURCHASE;
+
+    // ── Nuevo flujo: SALE / PURCHASE con items por categoría ──
+    if (isSalePurchase && dto.items?.length) {
+      const totalAnimals = dto.items.reduce((s, i) => s + i.quantity, 0);
+      const avgWeightKg = dto.avgWeightKg ?? 0;
+      const pricePerKg = dto.pricePerKg ?? 0;
+      const totalWeightKg = totalAnimals * avgWeightKg;
+      const totalAmount = dto.totalAmount ?? totalWeightKg * pricePerKg;
+
+      return this.prisma.$transaction(async (tx) => {
+        const movement = await tx.livestockMovement.create({
+          data: {
+            date: new Date(dto.date),
+            category: LivestockCategory.VACAS, // dummy requerido por schema legacy
+            type: dto.type,
+            quantity: totalAnimals,
+            avgWeightKg: dto.avgWeightKg ?? null,
+            pricePerKg: dto.pricePerKg ?? null,
+            totalWeightKg: totalWeightKg > 0 ? totalWeightKg : null,
+            totalAmount: totalAmount > 0 ? totalAmount : null,
+            notes: dto.notes ?? null,
+            items: {
+              create: (dto.items ?? []).map((i) => ({
+                category: i.category,
+                quantity: i.quantity,
+              })),
+            },
+          },
+          include: { items: true },
+        });
+
+        if (totalAmount > 0) {
+          await tx.financialMovement.create({
+            data: {
+              direction:
+                dto.type === LivestockMovementType.SALE
+                  ? FinancialDirection.INCOME
+                  : FinancialDirection.EXPENSE,
+              category:
+                dto.type === LivestockMovementType.SALE
+                  ? 'STOCK_SALE'
+                  : 'STOCK_PURCHASE',
+              amount: totalAmount,
+              currency: Currency.ARS,
+              exchangeRateAtCreation: 1,
+              baseCurrencyAmount: totalAmount,
+              notes: dto.notes ?? null,
+            },
+          });
+        }
+
+        return movement;
+      });
+    }
+
+    // ── Legacy: INCOME / DEATH / TRANSFER / ADJUSTMENT ────────
     const categoryV2 = dto.categoryV2 ?? null;
     const category: LivestockCategory = categoryV2
       ? V2_TO_V1[categoryV2]
       : (dto.category ?? LivestockCategory.VACAS);
+    const qty = dto.quantity ?? 0;
 
-    const isSaleWithPrice =
-      dto.type === LivestockMovementType.SALE && dto.totalPrice != null;
-
-    if (isSaleWithPrice) {
+    // Legacy SALE with totalPrice (para datos anteriores a este rediseño)
+    if (dto.type === LivestockMovementType.SALE && dto.totalPrice != null) {
       return this.prisma.$transaction(async (tx) => {
         const movement = await tx.livestockMovement.create({
           data: {
@@ -45,12 +102,11 @@ export class HaciendaService {
             category,
             categoryV2,
             type: dto.type,
-            quantity: dto.quantity,
+            quantity: qty,
             totalPrice: dto.totalPrice,
             notes: dto.notes ?? null,
           },
         });
-
         await tx.financialMovement.create({
           data: {
             direction: FinancialDirection.INCOME,
@@ -61,7 +117,6 @@ export class HaciendaService {
             baseCurrencyAmount: dto.totalPrice!,
           },
         });
-
         return movement;
       });
     }
@@ -72,7 +127,7 @@ export class HaciendaService {
         category,
         categoryV2,
         type: dto.type,
-        quantity: dto.quantity,
+        quantity: qty,
         totalPrice: dto.totalPrice ?? null,
         notes: dto.notes ?? null,
       },
@@ -83,6 +138,7 @@ export class HaciendaService {
     const movements = await this.prisma.livestockMovement.findMany({
       where: { deletedAt: null },
       orderBy: { date: 'desc' },
+      include: { items: true },
     });
 
     let totalHeads = 0;
@@ -91,26 +147,37 @@ export class HaciendaService {
 
     for (const m of movements) {
       const qty = m.quantity;
-      // Use V2 label if available
-      const cat: string = m.categoryV2 ?? m.category;
-
-      if (m.type === LivestockMovementType.INCOME) {
-        totalHeads += qty;
-        byCategory[cat] = (byCategory[cat] ?? 0) + qty;
+      let delta = 0;
+      if (
+        m.type === LivestockMovementType.INCOME ||
+        m.type === LivestockMovementType.PURCHASE ||
+        m.type === LivestockMovementType.ADJUSTMENT
+      ) {
+        delta = +qty;
       } else if (
         m.type === LivestockMovementType.SALE ||
         m.type === LivestockMovementType.DEATH ||
         m.type === LivestockMovementType.TRANSFER
       ) {
-        totalHeads -= qty;
-        byCategory[cat] = (byCategory[cat] ?? 0) - qty;
-      } else if (m.type === LivestockMovementType.ADJUSTMENT) {
-        totalHeads += qty;
-        byCategory[cat] = (byCategory[cat] ?? 0) + qty;
+        delta = -qty;
       }
 
-      if (m.type === LivestockMovementType.SALE && m.totalPrice != null) {
-        totalCattleSaleIncome += Number(m.totalPrice);
+      totalHeads += delta;
+
+      // Distribute by items if available, otherwise use legacy category field
+      if (m.items.length > 0 && qty > 0) {
+        for (const item of m.items) {
+          byCategory[item.category] = (byCategory[item.category] ?? 0) + delta * (item.quantity / qty);
+        }
+      } else {
+        const cat: string = m.categoryV2 ?? m.category;
+        byCategory[cat] = (byCategory[cat] ?? 0) + delta;
+      }
+
+      // Income from sales (new totalAmount or legacy totalPrice)
+      if (m.type === LivestockMovementType.SALE) {
+        const saleAmount = m.totalAmount != null ? Number(m.totalAmount) : (m.totalPrice != null ? Number(m.totalPrice) : 0);
+        totalCattleSaleIncome += saleAmount;
       }
     }
 
@@ -125,6 +192,7 @@ export class HaciendaService {
     return this.prisma.livestockMovement.findMany({
       where: { deletedAt: null },
       orderBy: { date: 'desc' },
+      include: { items: true },
     });
   }
 
