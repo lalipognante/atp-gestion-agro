@@ -10,6 +10,7 @@ import {
   voidLeaseContract,
   voidLeaseDelivery,
   voidHealthRecord,
+  voidFarmWork,
 } from "@/services/mutations";
 
 export type VoidAction =
@@ -18,7 +19,8 @@ export type VoidAction =
   | "terceros-pay"
   | "campos-contract-void"
   | "campos-delivery-void"
-  | "hacienda-void";
+  | "hacienda-void"
+  | "labores-void";
 
 const MUTATION_MAP: Record<VoidAction, (id: string) => Promise<unknown>> = {
   "stock-void":            voidStockMovement,
@@ -27,6 +29,7 @@ const MUTATION_MAP: Record<VoidAction, (id: string) => Promise<unknown>> = {
   "campos-contract-void":  voidLeaseContract,
   "campos-delivery-void":  voidLeaseDelivery,
   "hacienda-void":         voidHealthRecord,
+  "labores-void":          voidFarmWork,
 };
 
 const CONFIRM_MSG: Record<VoidAction, string> = {
@@ -36,6 +39,7 @@ const CONFIRM_MSG: Record<VoidAction, string> = {
   "campos-contract-void":  "¿Confirmar anulación del contrato? Esta acción no se puede revertir.",
   "campos-delivery-void":  "¿Confirmar anulación de la entrega? Esta acción no se puede revertir.",
   "hacienda-void":         "¿Confirmar anulación? Esta acción no se puede revertir.",
+  "labores-void":          "¿Confirmar anulación? Esta acción no se puede revertir.",
 };
 
 interface VoidButtonProps {

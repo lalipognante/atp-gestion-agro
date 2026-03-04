@@ -13,6 +13,7 @@ import { EmployeesModule } from './modules/employees/employees.module';
 import { PayrollModule } from './modules/payroll/payroll.module';
 import { ThirdPartyWorksModule } from './modules/third-party-works/third-party-works.module';
 import { LeaseContractsModule } from './modules/lease-contracts/lease-contracts.module';
+import { FarmWorksModule } from './modules/farm-works/farm-works.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { LeaseContractsModule } from './modules/lease-contracts/lease-contracts.
     PayrollModule,
     ThirdPartyWorksModule,
     LeaseContractsModule,
+    FarmWorksModule,
   ],
 })
 export class AppModule {}

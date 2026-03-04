@@ -64,6 +64,18 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
+    href: "/labores",
+    label: "Labores",
+    icon: (
+      <svg width="15" height="15" fill="none" viewBox="0 0 15 15" aria-hidden="true">
+        <rect x="1" y="7" width="9" height="6" rx="1" stroke="currentColor" strokeWidth="1.4" />
+        <path d="M1 10h9" stroke="currentColor" strokeWidth="1.4" />
+        <path d="M5.5 7V5a2 2 0 014 0v2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        <path d="M11 5l3 1v7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
     href: "/terceros",
     label: "Terceros",
     icon: (

@@ -280,27 +280,33 @@ export default async function CamposPage() {
             )}
           </div>
 
-          {/* ── Lots table ───────────────────────────── */}
-          <SectionCard
-            title="Lotes por Campo"
-            actions={
-              lots.length > 0 ? (
-                <span className="text-[0.7rem] text-neutral-400">
-                  {lots.length} lote{lots.length !== 1 ? "s" : ""}
-                </span>
-              ) : undefined
-            }
+          {/* ── Lotes + Contratos (2 columnas) ──────── */}
+          <div
+            className="grid gap-5 items-start"
+            style={{ gridTemplateColumns: "1fr 1fr" }}
           >
-            <DataTable<Lot>
-              columns={LOT_COLS}
-              rows={lots}
-              getRowKey={(row) => row.id}
-              emptyMessage="Sin campos ni lotes registrados"
-            />
-          </SectionCard>
+            <SectionCard
+              title="Lotes por Campo"
+              actions={
+                lots.length > 0 ? (
+                  <span className="text-[0.7rem] text-neutral-400">
+                    {lots.length} lote{lots.length !== 1 ? "s" : ""}
+                  </span>
+                ) : undefined
+              }
+            >
+              <DataTable<Lot>
+                columns={LOT_COLS}
+                rows={lots}
+                getRowKey={(row) => row.id}
+                emptyMessage="Sin campos ni lotes registrados"
+              />
+            </SectionCard>
 
-          {/* ── Contratos de alquiler ─────────────────── */}
-          <LeaseSection contracts={contracts} fields={fields} />
+            <div>
+              <LeaseSection contracts={contracts} fields={fields} />
+            </div>
+          </div>
 
         </div>
       </div>

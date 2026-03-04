@@ -10,6 +10,7 @@ import type {
   SalaryPayment,
   SalaryAdvance,
   ThirdPartyWork,
+  FarmWork,
   LeaseContract,
   LeaseDelivery,
   CreateFieldRequest,
@@ -23,6 +24,7 @@ import type {
   CreateSalaryPaymentRequest,
   CreateSalaryAdvanceRequest,
   CreateThirdPartyWorkRequest,
+  CreateFarmWorkRequest,
   CreateLeaseContractRequest,
   CreateLeaseDeliveryRequest,
 } from "@/types";
@@ -119,6 +121,15 @@ export function markThirdPartyWorkPaid(id: string) {
 
 export function voidThirdPartyWork(id: string) {
   return api.patch<ThirdPartyWork>(`/third-party-works/${id}/void`, {});
+}
+
+// ─── Farm Works ───────────────────────────────────────────
+export function createFarmWork(data: CreateFarmWorkRequest) {
+  return api.post<FarmWork>("/farm-works", data);
+}
+
+export function voidFarmWork(id: string) {
+  return api.patch<FarmWork>(`/farm-works/${id}/void`, {});
 }
 
 // ─── Lease Contracts ──────────────────────────────────────
