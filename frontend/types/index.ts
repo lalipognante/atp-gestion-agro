@@ -224,6 +224,29 @@ export interface LivestockMovementItemInput {
   quantity: number;
 }
 
+export interface LivestockMovementItem {
+  id: string;
+  category: string;
+  quantity: number;
+}
+
+export interface LivestockMovement {
+  id: string;
+  date: string;
+  type: LivestockMovementType;
+  category: string;
+  quantity: number;
+  totalPrice: string | null;
+  // V2 fields (may be present in production)
+  avgWeightKg?: number | null;
+  pricePerKg?: number | null;
+  totalWeightKg?: number | null;
+  totalAmount?: number | null;
+  notes: string | null;
+  createdAt: string;
+  items?: LivestockMovementItem[];
+}
+
 export interface CreateHaciendaMovementRequest {
   date: string;
   type: LivestockMovementType;

@@ -226,7 +226,7 @@ export function Sidebar() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-[0.8rem] font-semibold truncate" style={{ color: "#D6EDE4" }}>
-              Juan Rodríguez
+              Agustin Gambarota
             </div>
             <div className="text-[0.68rem]" style={{ color: "#3A8A68" }}>
               Administrador

@@ -23,7 +23,12 @@ import type {
 // ─── Label maps ────────────────────────────────────────────
 const CATEGORY_LABEL: Record<string, string> = {
   VENTA_CEREALES: "Venta de Cereales",
-  CATTLE_SALE: "Venta Hacienda",
+  CATTLE_SALE: "Venta de Hacienda",
+  STOCK_SALE: "Venta de Stock / Grano",
+  STOCK_PURCHASE: "Compra de Stock / Grano",
+  THIRD_PARTY_WORK: "Labor de Terceros",
+  LABOR_INTERNA: "Labor Propia",
+  // Alquiler is stored as string "Alquiler" directly — no mapping needed
   SUBSIDIO: "Subsidio",
   OTRO_INGRESO: "Otro Ingreso",
   INSUMOS: "Insumos",
