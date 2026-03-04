@@ -17,10 +17,7 @@ function ObligationBadge({ status }: { status: ObligationItem["status"] }) {
       : { background: "#EEF7F2", color: "#2E6B52" };
   const label = status === "PENDING" ? "Pendiente" : "Pagado";
   return (
-    <span
-      className="text-[0.7rem] font-semibold px-2 py-0.5 rounded-full"
-      style={styles}
-    >
+    <span className="text-[0.7rem] font-semibold px-2 py-0.5 rounded-full" style={styles}>
       {label}
     </span>
   );
@@ -48,21 +45,24 @@ const LIVESTOCK_CATEGORY_LABEL: Record<string, string> = {
   TOROS: "Toros",
 };
 
+const LIVESTOCK_CATEGORY_COLOR: Record<string, string> = {
+  TERNEROS: "#C0705A",
+  NOVILLOS: "#3A8A68",
+  VACAS:    "#3A5AA0",
+  TOROS:    "#7A5A1E",
+};
+
 const OBLIGATION_COLS: TableColumn<ObligationItem>[] = [
   {
     key: "concept",
     header: "Concepto",
-    render: (row) => (
-      <span className="font-medium text-neutral-900">{row.concept}</span>
-    ),
+    render: (row) => <span className="font-medium text-neutral-900">{row.concept}</span>,
   },
   {
     key: "dueDate",
     header: "Vence",
     render: (row) => (
-      <span className="text-[0.75rem] text-neutral-400 font-mono">
-        {formatDateShort(row.dueDate)}
-      </span>
+      <span className="text-[0.75rem] text-neutral-400 font-mono">{formatDateShort(row.dueDate)}</span>
     ),
   },
   {
@@ -70,9 +70,7 @@ const OBLIGATION_COLS: TableColumn<ObligationItem>[] = [
     header: "Monto",
     align: "right",
     render: (row) => (
-      <span className="font-mono text-[0.78rem]">
-        {formatCurrency(Number(row.amount), row.currency)}
-      </span>
+      <span className="font-mono text-[0.78rem]">{formatCurrency(Number(row.amount), row.currency)}</span>
     ),
   },
   {
@@ -88,9 +86,7 @@ const HEALTH_COLS: TableColumn<HealthRecord>[] = [
     key: "date",
     header: "Fecha",
     render: (row) => (
-      <span className="text-[0.75rem] text-neutral-400 font-mono">
-        {formatDate(row.date)}
-      </span>
+      <span className="text-[0.75rem] text-neutral-400 font-mono">{formatDate(row.date)}</span>
     ),
   },
   {
@@ -106,9 +102,7 @@ const HEALTH_COLS: TableColumn<HealthRecord>[] = [
     key: "quantity",
     header: "Cant.",
     align: "right",
-    render: (row) => (
-      <span className="font-mono text-[0.82rem]">{formatNumber(row.quantity)}</span>
-    ),
+    render: (row) => <span className="font-mono text-[0.82rem]">{formatNumber(row.quantity)}</span>,
   },
   {
     key: "cost",
@@ -122,11 +116,7 @@ const HEALTH_COLS: TableColumn<HealthRecord>[] = [
   },
 ];
 
-// ─── Payment method row ────────────────────────────────────
-interface PaymentRow {
-  method: string;
-  total: number;
-}
+interface PaymentRow { method: string; total: number; }
 
 const PAYMENT_COLS: TableColumn<PaymentRow>[] = [
   {
@@ -149,6 +139,51 @@ const PAYMENT_COLS: TableColumn<PaymentRow>[] = [
     ),
   },
 ];
+
+// ─── Hacienda compact grid ─────────────────────────────────
+function HaciendaCompact({
+  byCategory,
+}: {
+  byCategory: Record<string, number>;
+}) {
+  const entries = Object.entries(byCategory).sort(([, a], [, b]) => b - a);
+
+  if (entries.length === 0) {
+    return (
+      <p className="text-[0.8rem] text-neutral-400 py-3 text-center">
+        Sin registros de hacienda
+      </p>
+    );
+  }
+
+  return (
+    <div
+      className="grid gap-2"
+      style={{ gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))" }}
+    >
+      {entries.map(([cat, count]) => {
+        const color = LIVESTOCK_CATEGORY_COLOR[cat] ?? "#374151";
+        return (
+          <div
+            key={cat}
+            className="flex flex-col items-center justify-center rounded-[10px] py-3 px-2 text-center"
+            style={{ background: "#F7F9F6" }}
+          >
+            <span
+              className="text-[1.6rem] font-bold font-mono leading-none"
+              style={{ color }}
+            >
+              {formatNumber(count)}
+            </span>
+            <span className="text-[0.68rem] font-semibold uppercase tracking-wide text-neutral-500 mt-1">
+              {LIVESTOCK_CATEGORY_LABEL[cat] ?? cat}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 // ─── Error UI ─────────────────────────────────────────────
 function DashboardError({ message }: { message: string }) {
@@ -205,10 +240,6 @@ export default async function DashboardPage() {
     .map(([method, total]) => ({ method, total }))
     .sort((a, b) => b.total - a.total);
 
-  // Livestock breakdown sorted by count desc
-  const byCategoryEntries = Object.entries(livestock.byCategory ?? {})
-    .sort(([, a], [, b]) => b - a);
-
   return (
     <>
       <Header
@@ -219,10 +250,10 @@ export default async function DashboardPage() {
       <div className="flex-1 overflow-auto">
         <div className="p-6 lg:p-7 flex flex-col gap-5 max-w-[1400px]">
 
-          {/* ── KPI Row ─────────────────────────────────── */}
+          {/* ── Row 1: KPI cards ─────────────────────── */}
           <div
             className="grid gap-3.5"
-            style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}
+            style={{ gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))" }}
             role="region"
             aria-label="Indicadores principales"
           >
@@ -240,10 +271,7 @@ export default async function DashboardPage() {
                   ? { direction: "up", label: "stock disponible" }
                   : { direction: "down", label: "stock negativo" }
               }
-              progress={{
-                value: stock.totalNetStock > 0 ? 50 : 0,
-                color: "#E07070",
-              }}
+              progress={{ value: stock.totalNetStock > 0 ? 50 : 0, color: "#E07070" }}
             />
             <KpiCard
               label="Obligaciones Pendientes"
@@ -273,12 +301,9 @@ export default async function DashboardPage() {
             />
           </div>
 
-          {/* ── Middle Row: Hacienda breakdown + Actividad ── */}
-          <div
-            className="grid gap-3.5"
-            style={{ gridTemplateColumns: "1fr 320px" }}
-          >
-            {/* Stock Hacienda con breakdown */}
+          {/* ── Row 2: Hacienda compact + Resumen Financiero ── */}
+          <div className="grid gap-3.5" style={{ gridTemplateColumns: "1fr 1fr" }}>
+
             <SectionCard
               title="Stock Hacienda"
               actions={
@@ -287,83 +312,9 @@ export default async function DashboardPage() {
                 </span>
               }
             >
-              <div className="flex flex-col gap-2.5">
-                {byCategoryEntries.length === 0 ? (
-                  <p className="text-[0.8rem] text-neutral-400 py-2 text-center">Sin registros de hacienda</p>
-                ) : (
-                  byCategoryEntries.map(([cat, count]) => {
-                    const pct = livestock.totalHeads > 0
-                      ? Math.round((count / livestock.totalHeads) * 100)
-                      : 0;
-                    const isTerneros = cat === "TERNEROS";
-                    return (
-                      <div key={cat} className="flex flex-col gap-1">
-                        <div className="flex items-center justify-between">
-                          <span
-                            className="text-[0.78rem] font-semibold"
-                            style={{ color: isTerneros ? "#C0705A" : "#374151" }}
-                          >
-                            {LIVESTOCK_CATEGORY_LABEL[cat] ?? cat}
-                            {isTerneros && (
-                              <span
-                                className="ml-1.5 text-[0.65rem] font-semibold px-1.5 py-0.5 rounded-full"
-                                style={{ background: "#FEF5F0", color: "#C0705A" }}
-                              >
-                                destacado
-                              </span>
-                            )}
-                          </span>
-                          <span className="font-mono text-[0.82rem] font-semibold text-neutral-900">
-                            {formatNumber(count)}
-                          </span>
-                        </div>
-                        <div className="rounded-full h-[5px]" style={{ background: "#F0F2EE" }}>
-                          <div
-                            className="h-[5px] rounded-full"
-                            style={{
-                              width: `${pct}%`,
-                              background: isTerneros ? "#C0705A" : "#C8D84B",
-                            }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
+              <HaciendaCompact byCategory={livestock.byCategory ?? {}} />
             </SectionCard>
 
-            <SectionCard title="Actividad Reciente">
-              <ActivityList items={lastMovements} />
-            </SectionCard>
-          </div>
-
-          {/* ── Obligaciones ────────────────────────────── */}
-          <SectionCard
-            title="Obligaciones Próximas"
-            actions={
-              allObligations.length > 0 ? (
-                <span className="text-[0.7rem] text-neutral-400">
-                  {obligations.urgent.length} urgente
-                  {obligations.urgent.length !== 1 ? "s" : ""}
-                </span>
-              ) : undefined
-            }
-          >
-            <DataTable<ObligationItem>
-              columns={OBLIGATION_COLS}
-              rows={allObligations}
-              getRowKey={(row) => row.id}
-              emptyMessage="Sin obligaciones próximas"
-            />
-          </SectionCard>
-
-          {/* ── Bottom Row: Financiero + Pagos + Sanidad ── */}
-          <div
-            className="grid gap-3.5"
-            style={{ gridTemplateColumns: "1fr 1fr 1fr" }}
-          >
-            {/* Resumen financiero */}
             <SectionCard title="Resumen del Mes">
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1">
@@ -403,8 +354,38 @@ export default async function DashboardPage() {
                 </div>
               </div>
             </SectionCard>
+          </div>
 
-            {/* Pagos por método */}
+          {/* ── Row 3: Obligaciones + Actividad ──────── */}
+          <div className="grid gap-3.5" style={{ gridTemplateColumns: "1fr 320px" }}>
+
+            <SectionCard
+              title="Obligaciones Próximas"
+              actions={
+                allObligations.length > 0 ? (
+                  <span className="text-[0.7rem] text-neutral-400">
+                    {obligations.urgent.length} urgente
+                    {obligations.urgent.length !== 1 ? "s" : ""}
+                  </span>
+                ) : undefined
+              }
+            >
+              <DataTable<ObligationItem>
+                columns={OBLIGATION_COLS}
+                rows={allObligations}
+                getRowKey={(row) => row.id}
+                emptyMessage="Sin obligaciones próximas"
+              />
+            </SectionCard>
+
+            <SectionCard title="Actividad Reciente">
+              <ActivityList items={lastMovements} />
+            </SectionCard>
+          </div>
+
+          {/* ── Row 4: Pagos + Sanidad ────────────────── */}
+          <div className="grid gap-3.5" style={{ gridTemplateColumns: "1fr 1fr" }}>
+
             <SectionCard title="Pagos por Método">
               <DataTable<PaymentRow>
                 columns={PAYMENT_COLS}
@@ -414,7 +395,6 @@ export default async function DashboardPage() {
               />
             </SectionCard>
 
-            {/* Últimos registros sanitarios */}
             <SectionCard title="Últimos Registros Sanitarios">
               <DataTable<HealthRecord>
                 columns={HEALTH_COLS}

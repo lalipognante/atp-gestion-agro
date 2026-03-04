@@ -159,6 +159,7 @@ model Lot {
   campaigns        Campaign[]
   stockMovements   StockMovement[]
   thirdPartyWorks  ThirdPartyWork[]
+  farmWorks        FarmWork[]
 
   @@map("lots")
 }
@@ -360,6 +361,28 @@ model ThirdPartyWork {
   @@index([lotId])
   @@index([deletedAt])
   @@map("third_party_works")
+}
+
+// ───────────────── FARM WORKS (internal labors) ─────────────────
+
+model FarmWork {
+  id          String             @id @default(uuid())
+  date        DateTime           @db.Date
+  workType    ThirdPartyWorkType @map("work_type")
+  lotId       String             @map("lot_id")
+  responsible String?
+  cost        Decimal?           @db.Decimal(14, 2)
+  currency    Currency?
+  notes       String?
+  financialMovementId String?    @map("financial_movement_id")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  deletedAt   DateTime?          @map("deleted_at")
+
+  lot Lot @relation(fields: [lotId], references: [id])
+
+  @@index([lotId])
+  @@index([deletedAt])
+  @@map("farm_works")
 }
 
 // ───────────────── LEASE CONTRACTS ─────────────────

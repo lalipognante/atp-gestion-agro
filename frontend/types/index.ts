@@ -397,6 +397,43 @@ export interface CreateSalaryAdvanceRequest {
   notes?: string;
 }
 
+// ─── Farm Works (Labores internas) ────────────────────────
+export type FarmWorkType =
+  | "SIEMBRA"
+  | "FUMIGACION"
+  | "COSECHA"
+  | "FERTILIZACION"
+  | "MOVIMIENTO_SUELO";
+
+export interface FarmWork {
+  id: string;
+  date: string;
+  workType: FarmWorkType;
+  lotId: string;
+  responsible: string | null;
+  cost: string | null;
+  currency: Currency | null;
+  notes: string | null;
+  financialMovementId: string | null;
+  createdAt: string;
+  deletedAt: string | null;
+  lot?: {
+    id: string;
+    location: string | null;
+    field?: { id: string; name: string; type: string } | null;
+  };
+}
+
+export interface CreateFarmWorkRequest {
+  date: string;
+  workType: FarmWorkType;
+  lotId: string;
+  responsible?: string;
+  cost?: number;
+  currency?: Currency;
+  notes?: string;
+}
+
 // ─── Dashboard Yield ──────────────────────────────────────
 export interface YieldItem {
   crop: string;
