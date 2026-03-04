@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { getHaciendaDashboard, getHealthRecords } from "@/services/hacienda";
+import { getHaciendaDashboard, getHealthRecords, getLivestockMovements } from "@/services/hacienda";
 import { Header } from "@/components/layout/Header";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { SectionCard } from "@/components/ui/SectionCard";
@@ -9,21 +9,40 @@ import { NuevoHaciendaDialog } from "@/components/forms/NuevoHaciendaDialog";
 import { NuevoSanidadDialog } from "@/components/forms/NuevoSanidadDialog";
 import { VoidButton } from "@/components/forms/VoidButton";
 import { formatCurrency, formatNumber, formatDate } from "@/lib/utils";
-import type { HealthRecord } from "@/types";
+import type { HealthRecord, LivestockMovement } from "@/types";
 
-// ─── V2 category label map ─────────────────────────────────
-const CATEGORY_V2_LABEL: Record<string, string> = {
+// ─── Category label map ────────────────────────────────────
+const CATEGORY_LABEL: Record<string, string> = {
+  // V1 groups
+  TERNEROS: "Terneros",
+  NOVILLOS: "Novillos",
+  VACAS:    "Vacas",
+  TOROS:    "Toros",
+  // V2 individual categories
   TERNERO:    "Ternero",
   TERNERA:    "Ternera",
   NOVILLO:    "Novillo",
   VAQUILLONA: "Vaquillona",
   TORO:       "Toro",
   VACA:       "Vaca",
-  // Legacy fallback
-  TERNEROS: "Terneros",
-  NOVILLOS: "Novillos",
-  VACAS:    "Vacas",
-  TOROS:    "Toros",
+};
+
+const MOV_TYPE_LABEL: Record<string, string> = {
+  INCOME:     "Ingreso",
+  PURCHASE:   "Compra",
+  SALE:       "Venta",
+  DEATH:      "Baja / Muerte",
+  TRANSFER:   "Transferencia",
+  ADJUSTMENT: "Ajuste",
+};
+
+const MOV_TYPE_COLOR: Record<string, { bg: string; color: string }> = {
+  INCOME:     { bg: "#EEF7F2", color: "#2E6B52" },
+  PURCHASE:   { bg: "#EEF4FF", color: "#3B5FBF" },
+  SALE:       { bg: "#FFF8EC", color: "#B06A10" },
+  DEATH:      { bg: "#FEF0F0", color: "#C0505A" },
+  TRANSFER:   { bg: "#F5F5F5", color: "#555" },
+  ADJUSTMENT: { bg: "#F5F5F5", color: "#555" },
 };
 
 const LIVESTOCK_TYPE_LABEL: Record<string, string> = {
@@ -46,26 +65,6 @@ interface CategoryRow {
   category: string;
   heads: number;
 }
-
-const CATEGORY_COLS: TableColumn<CategoryRow>[] = [
-  {
-    key: "category",
-    header: "Categoría",
-    render: (row) => (
-      <span className="font-medium text-neutral-900">
-        {CATEGORY_V2_LABEL[row.category] ?? row.category}
-      </span>
-    ),
-  },
-  {
-    key: "heads",
-    header: "Cabezas",
-    align: "right",
-    render: (row) => (
-      <span className="font-mono text-[0.82rem]">{formatNumber(row.heads)}</span>
-    ),
-  },
-];
 
 const HEALTH_COLS: TableColumn<HealthRecord>[] = [
   {
@@ -171,14 +170,116 @@ function PageError({ message }: { message: string }) {
   );
 }
 
+const MOVEMENT_COLS: TableColumn<LivestockMovement>[] = [
+  {
+    key: "date",
+    header: "Fecha",
+    render: (row) => (
+      <span className="text-[0.75rem] text-neutral-400 font-mono">
+        {formatDate(row.date)}
+      </span>
+    ),
+  },
+  {
+    key: "type",
+    header: "Tipo",
+    render: (row) => {
+      const s = MOV_TYPE_COLOR[row.type] ?? { bg: "#F5F5F5", color: "#555" };
+      return (
+        <span
+          className="text-[0.7rem] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
+          style={s}
+        >
+          {MOV_TYPE_LABEL[row.type] ?? row.type}
+        </span>
+      );
+    },
+  },
+  {
+    key: "category",
+    header: "Categoría",
+    render: (row) => {
+      // If V2 items exist, show them as a compact list
+      if (row.items && row.items.length > 0) {
+        return (
+          <span className="text-[0.78rem] text-neutral-700">
+            {row.items.map((it) => `${CATEGORY_LABEL[it.category] ?? it.category} ×${it.quantity}`).join(", ")}
+          </span>
+        );
+      }
+      return (
+        <span className="text-[0.82rem] text-neutral-700">
+          {CATEGORY_LABEL[row.category] ?? row.category}
+        </span>
+      );
+    },
+  },
+  {
+    key: "quantity",
+    header: "Cabezas",
+    align: "right",
+    render: (row) => (
+      <span className="font-mono text-[0.82rem]">{formatNumber(row.quantity)}</span>
+    ),
+  },
+  {
+    key: "weight",
+    header: "Kg totales",
+    align: "right",
+    render: (row) => {
+      const kg = row.totalWeightKg ?? null;
+      return (
+        <span className="font-mono text-[0.82rem] text-neutral-600">
+          {kg != null ? `${formatNumber(kg)} kg` : "—"}
+        </span>
+      );
+    },
+  },
+  {
+    key: "pricePerKg",
+    header: "$/kg",
+    align: "right",
+    render: (row) => {
+      const ppk = row.pricePerKg ?? null;
+      return (
+        <span className="font-mono text-[0.82rem] text-neutral-600">
+          {ppk != null ? formatCurrency(Number(ppk)) : "—"}
+        </span>
+      );
+    },
+  },
+  {
+    key: "total",
+    header: "Total",
+    align: "right",
+    render: (row) => {
+      const amt = row.totalAmount ?? row.totalPrice;
+      return (
+        <span className="font-mono text-[0.82rem] font-semibold text-neutral-800">
+          {amt != null && Number(amt) > 0 ? formatCurrency(Number(amt)) : "—"}
+        </span>
+      );
+    },
+  },
+  {
+    key: "notes",
+    header: "Notas",
+    render: (row) => (
+      <span className="text-[0.75rem] text-neutral-400">{row.notes ?? "—"}</span>
+    ),
+  },
+];
+
 // ─── Page ─────────────────────────────────────────────────
 export default async function HaciendaPage() {
   let data;
   let healthRecords: HealthRecord[] = [];
+  let movements: LivestockMovement[] = [];
   try {
-    [data, healthRecords] = await Promise.all([
+    [data, healthRecords, movements] = await Promise.all([
       getHaciendaDashboard(),
       getHealthRecords(),
+      getLivestockMovements(),
     ]);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Error de conexión con el servidor";
@@ -249,12 +350,35 @@ export default async function HaciendaPage() {
                 ) : undefined
               }
             >
-              <DataTable<CategoryRow>
-                columns={CATEGORY_COLS}
-                rows={categoryRows}
-                getRowKey={(row) => row.category}
-                emptyMessage="Sin movimientos registrados"
-              />
+              {categoryRows.length === 0 ? (
+                <p className="text-[0.82rem] text-neutral-400 py-4 text-center">
+                  Sin movimientos registrados
+                </p>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between px-[14px] pb-[10px] border-b border-gray-200">
+                    <span className="text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-neutral-400">
+                      Categoría
+                    </span>
+                    <span className="text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-neutral-400">
+                      Cabezas
+                    </span>
+                  </div>
+                  {categoryRows.map((row) => (
+                    <div
+                      key={row.category}
+                      className="flex items-center justify-between px-[14px] py-[11px] border-b border-gray-50 last:border-b-0 hover:bg-neutral-50 transition-colors"
+                    >
+                      <span className="font-medium text-[0.82rem] text-neutral-900">
+                        {CATEGORY_LABEL[row.category] ?? row.category}
+                      </span>
+                      <span className="font-mono text-[0.82rem] text-neutral-800">
+                        {formatNumber(row.heads)}
+                      </span>
+                    </div>
+                  ))}
+                </>
+              )}
             </SectionCard>
 
             {/* ── Sanidad ─────────────────────────────────── */}
@@ -276,6 +400,27 @@ export default async function HaciendaPage() {
               />
             </SectionCard>
           </div>
+
+          {/* ── Movimientos de Hacienda ──────────────────── */}
+          <SectionCard
+            title="Movimientos de Hacienda"
+            actions={
+              movements.length > 0 ? (
+                <span className="text-[0.7rem] text-neutral-400">
+                  {movements.length} movimiento{movements.length !== 1 ? "s" : ""}
+                </span>
+              ) : undefined
+            }
+          >
+            <div className="overflow-x-auto">
+              <DataTable<LivestockMovement>
+                columns={MOVEMENT_COLS}
+                rows={movements}
+                getRowKey={(row) => row.id}
+                emptyMessage="Sin movimientos registrados"
+              />
+            </div>
+          </SectionCard>
 
         </div>
       </div>
