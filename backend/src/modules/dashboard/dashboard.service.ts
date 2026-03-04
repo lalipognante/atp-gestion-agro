@@ -43,7 +43,7 @@ export class DashboardService {
       recentThirdPartyWorks,
     ] = await Promise.all([
       this.prisma.stockMovement.findMany(),
-      this.prisma.livestockMovement.findMany(),
+      this.prisma.livestockMovement.findMany({ include: { items: true } }),
       this.prisma.financialMovement.findMany({
         where: { createdAt: { gte: startOfMonth, lt: startOfNextMonth } },
       }),
@@ -94,6 +94,15 @@ export class DashboardService {
     }
 
     // ── Hacienda: total cabezas + breakdown por categoría ───
+    // V2 → V1 mapping for dashboard summary
+    const V2_TO_V1_DASH: Record<string, LivestockCategory> = {
+      TERNERO:    LivestockCategory.TERNEROS,
+      TERNERA:    LivestockCategory.TERNEROS,
+      NOVILLO:    LivestockCategory.NOVILLOS,
+      VAQUILLONA: LivestockCategory.NOVILLOS,
+      TORO:       LivestockCategory.TOROS,
+      VACA:       LivestockCategory.VACAS,
+    };
     const byCategory: Record<string, number> = {
       TERNEROS: 0,
       NOVILLOS: 0,
@@ -105,14 +114,23 @@ export class DashboardService {
       const qty = m.quantity;
       let delta = 0;
       switch (m.type) {
-        case LivestockMovementType.INCOME:     delta = +qty;  break;
+        case LivestockMovementType.INCOME:
+        case LivestockMovementType.PURCHASE:   delta = +qty;  break;
         case LivestockMovementType.SALE:
         case LivestockMovementType.DEATH:
         case LivestockMovementType.TRANSFER:   delta = -qty;  break;
         case LivestockMovementType.ADJUSTMENT: delta = +qty;  break;
       }
       totalHeads += delta;
-      if (m.category in byCategory) {
+
+      if (m.items && m.items.length > 0 && qty > 0) {
+        // Distribute by items using V2 → V1 mapping
+        for (const item of m.items) {
+          const v1Cat = V2_TO_V1_DASH[item.category] ?? LivestockCategory.VACAS;
+          const itemDelta = delta * (item.quantity / qty);
+          byCategory[v1Cat] = (byCategory[v1Cat] ?? 0) + itemDelta;
+        }
+      } else if (m.category in byCategory) {
         byCategory[m.category as LivestockCategory] =
           (byCategory[m.category as LivestockCategory] ?? 0) + delta;
       }
@@ -143,17 +161,42 @@ export class DashboardService {
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(0, 10);
 
+    const LIVESTOCK_TYPE_LABEL: Record<string, string> = {
+      SALE: 'Venta',
+      PURCHASE: 'Compra',
+      INCOME: 'Ingreso',
+      DEATH: 'Baja',
+      TRANSFER: 'Transferencia',
+      ADJUSTMENT: 'Ajuste',
+    };
+
+    const FINANCIAL_CATEGORY_LABEL: Record<string, string> = {
+      STOCK_SALE: 'Venta de Hacienda',
+      STOCK_PURCHASE: 'Compra de Hacienda',
+      CATTLE_SALE: 'Venta de Hacienda',
+      THIRD_PARTY_WORK: 'Labor contratada',
+      LABOR_INTERNA: 'Labor propia',
+      SANIDAD: 'Sanidad',
+      Alquiler: 'Alquiler',
+    };
+
     const combined = [
       ...recentFinancial.map((m) => ({
         id: m.id, source: 'financial' as const, date: m.createdAt,
-        description: m.category ?? m.direction,
+        description: (m.category && FINANCIAL_CATEGORY_LABEL[m.category]) ?? m.category ?? m.direction,
         direction: m.direction, amount: Number(m.baseCurrencyAmount), currency: m.currency,
       })),
-      ...recentLivestock.map((m) => ({
-        id: m.id, source: 'livestock' as const, date: m.date,
-        description: `${m.type} · ${m.category}`,
-        quantity: m.quantity, totalPrice: m.totalPrice != null ? Number(m.totalPrice) : null,
-      })),
+      ...recentLivestock.map((m) => {
+        const label = LIVESTOCK_TYPE_LABEL[m.type] ?? m.type;
+        const effectiveAmount = m.totalAmount != null ? Number(m.totalAmount) : (m.totalPrice != null ? Number(m.totalPrice) : null);
+        const description = `${label} · ${m.quantity} animal${m.quantity !== 1 ? 'es' : ''}`;
+        return {
+          id: m.id, source: 'livestock' as const, date: m.date,
+          description,
+          quantity: m.quantity,
+          totalPrice: effectiveAmount,
+        };
+      }),
       ...recentStock.map((m) => ({
         id: m.id, source: 'stock' as const, date: m.createdAt,
         description: `${m.movementType} · ${m.product}`,
