@@ -3,8 +3,7 @@ export const dynamic = "force-dynamic";
 import { getDashboardData } from "@/services/dashboard";
 import { Header } from "@/components/layout/Header";
 import { ActivityList } from "@/components/ui/ActivityList";
-import { CompactEmpty, PageIntro, SummaryMetric } from "@/components/ui/ProductPage";
-import { SectionCard } from "@/components/ui/SectionCard";
+import { CompactEmpty } from "@/components/ui/ProductPage";
 import { formatCurrency, formatDateShort, formatNumber } from "@/lib/utils";
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -12,13 +11,6 @@ const CATEGORY_LABEL: Record<string, string> = {
   NOVILLOS: "Novillos",
   VACAS: "Vacas",
   TOROS: "Toros",
-};
-
-const TREATMENT_LABEL: Record<string, string> = {
-  VACUNA: "Vacunación",
-  BAÑO: "Baño",
-  DESPARASITACION: "Desparasitación",
-  OTRO: "Otro",
 };
 
 function PageError({ message }: { message: string }) {
@@ -40,142 +32,152 @@ export default async function DashboardPage() {
     return <PageError message={err instanceof Error ? err.message : "Error de conexión con el servidor"} />;
   }
 
-  const { stock, livestock, financial, obligations, lastMovements, latestHealthRecords } = data;
-  const commitments = [...obligations.urgent, ...obligations.upcoming];
+  const { stock, livestock, financial, obligations, lastMovements, recentThirdPartyWorks } = data;
+  const commitments = [...obligations.urgent, ...obligations.upcoming].slice(0, 4);
+  const activeThirdPartyWorks = (recentThirdPartyWorks ?? []).filter((work) => work.status === "PENDING" && !work.deletedAt);
   const resultPositive = financial.monthlyResult >= 0;
+  const maxFinancialValue = Math.max(financial.monthlyIncome, financial.monthlyExpense, Math.abs(financial.monthlyResult), 1);
+  const bars = [
+    { label: "Ingresos", value: financial.monthlyIncome, color: "bg-accent" },
+    { label: "Egresos", value: financial.monthlyExpense, color: "bg-white/35" },
+    { label: "Resultado", value: Math.abs(financial.monthlyResult), color: resultPositive ? "bg-green-500" : "bg-[#D16B6B]" },
+  ];
+  const attention = [
+    ...obligations.urgent.slice(0, 2).map((item) => ({
+      id: item.id,
+      eyebrow: "Vencimiento prioritario",
+      title: item.concept,
+      detail: `${formatCurrency(Number(item.amount), item.currency)} · vence ${formatDateShort(item.dueDate)}`,
+    })),
+    ...activeThirdPartyWorks.slice(0, 1).map((work) => ({
+      id: work.id,
+      eyebrow: "Labor externa pendiente",
+      title: work.contractor,
+      detail: `${work.lot?.field?.name ?? "Campo"} · ${work.amount ? formatCurrency(Number(work.amount), work.currency ?? "ARS") : `${work.quintales ?? 0} qq`}`,
+    })),
+    ...(stock.totalNetStock < 0
+      ? [{
+          id: "stock-negative",
+          eyebrow: "Control de stock",
+          title: "El stock neto requiere revisión",
+          detail: `${formatNumber(stock.totalNetStock)} unidades registradas`,
+        }]
+      : []),
+  ].slice(0, 3);
   const today = new Intl.DateTimeFormat("es-AR", {
     weekday: "long",
     day: "numeric",
     month: "long",
   }).format(new Date());
-  const attention = [
-    ...obligations.urgent.slice(0, 2).map((item) => ({
-      id: item.id,
-      label: "Vencimiento prioritario",
-      title: item.concept,
-      detail: `${formatCurrency(Number(item.amount), item.currency)} · vence ${formatDateShort(item.dueDate)}`,
-    })),
-    ...(stock.totalNetStock < 0
-      ? [{
-          id: "stock-negative",
-          label: "Control de stock",
-          title: "El stock neto requiere revisión",
-          detail: `${formatNumber(stock.totalNetStock)} unidades registradas`,
-        }]
-      : []),
-  ];
 
   return (
     <>
-      <Header title="Inicio" subtitle="Pulso operativo del establecimiento" />
+      <Header title="Inicio" />
       <div className="flex-1 overflow-auto">
-        <div className="mx-auto flex max-w-[1480px] flex-col gap-5 p-4 sm:p-6 lg:p-7">
-          <PageIntro
-            eyebrow={today}
-            title="Buen día. Este es el pulso de La Primavera."
-            description="Lo importante para decidir hoy: compromisos, caja del mes, producción y movimientos recientes."
-          />
-
-          <section className="rounded-card border border-green-800 bg-green-950 p-5 text-white app-shadow">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="lg:max-w-[300px]">
-                <div className="text-[0.66rem] font-extrabold uppercase tracking-[0.15em] text-accent">Morning brief</div>
-                <h3 className="mt-2 text-xl font-extrabold tracking-[-0.06em]">Atención requerida</h3>
-                <p className="mt-1 text-[0.78rem] leading-5 text-white/60">
-                  {attention.length > 0
-                    ? `${attention.length} tema${attention.length !== 1 ? "s" : ""} para revisar antes de avanzar.`
-                    : "No hay urgencias críticas registradas para hoy."}
-                </p>
-              </div>
-              <div className="grid flex-1 gap-2 lg:max-w-[820px] lg:grid-cols-2">
-                {attention.length > 0 ? attention.map((item) => (
-                  <div key={item.id} className="rounded-[12px] border border-white/10 bg-white/[0.06] px-4 py-3">
-                    <div className="text-[0.62rem] font-extrabold uppercase tracking-[0.12em] text-accent">{item.label}</div>
-                    <div className="mt-1 text-[0.82rem] font-bold">{item.title}</div>
-                    <div className="mt-1 text-[0.7rem] text-white/55">{item.detail}</div>
-                  </div>
-                )) : (
-                  <div className="rounded-[12px] border border-white/10 bg-white/[0.06] px-4 py-3 lg:col-span-2">
-                    <div className="text-[0.82rem] font-bold">Operación sin alertas críticas</div>
-                    <div className="mt-1 text-[0.7rem] text-white/55">Podés concentrarte en los próximos compromisos y movimientos del establecimiento.</div>
-                  </div>
-                )}
-              </div>
+        <main className="mx-auto max-w-[1440px] p-4 sm:p-6 lg:p-8">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div>
+              <p className="text-[0.68rem] font-extrabold uppercase tracking-[0.15em] text-green-700">{today}</p>
+              <h1 className="mt-2 text-[1.8rem] font-extrabold tracking-[-0.075em] text-neutral-900 sm:text-[2.15rem]">Buen día, Agustín</h1>
+              <p className="mt-1 text-[0.82rem] text-neutral-400">El pulso operativo de La Primavera, resumido para decidir.</p>
             </div>
-          </section>
-
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <SummaryMetric label="Resultado del mes" value={formatCurrency(financial.monthlyResult)} detail={resultPositive ? "Balance positivo" : "Balance negativo"} tone={resultPositive ? "positive" : "danger"} />
-            <SummaryMetric label="Compromisos" value={String(obligations.pendingCount ?? 0)} detail="Obligaciones pendientes" tone={(obligations.pendingCount ?? 0) > 0 ? "warning" : "positive"} />
-            <SummaryMetric label="Hacienda" value={formatNumber(livestock.totalHeads)} detail="Cabezas en rodeo" />
-            <SummaryMetric label="Stock disponible" value={`${formatNumber(stock.totalNetStock)} u`} detail="Stock neto registrado" tone={stock.totalNetStock < 0 ? "danger" : "default"} />
           </div>
 
-          <div className="grid grid-cols-1 gap-3.5 xl:grid-cols-[minmax(0,1fr)_340px]">
-            <SectionCard title="Próximos compromisos" actions={<span className="text-[0.7rem] text-neutral-400">{commitments.length} próximos</span>}>
-              {commitments.length > 0 ? (
-                <div className="divide-y app-border">
-                  {commitments.map((item) => (
-                    <div key={item.id} className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <div className="text-[0.82rem] font-bold text-neutral-900">{item.concept}</div>
-                        <div className="mt-1 text-[0.7rem] text-neutral-400">Vence {formatDateShort(item.dueDate)} · {item.type}</div>
-                      </div>
-                      <div className="text-[0.82rem] font-extrabold tabular-nums text-neutral-900">{formatCurrency(Number(item.amount), item.currency)}</div>
-                    </div>
-                  ))}
+          <div className="mt-6 grid gap-4 lg:grid-cols-[1.35fr_0.65fr]">
+            <section className="rounded-card border app-border app-surface p-5 app-shadow">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-[0.95rem] font-extrabold tracking-[-0.03em] text-neutral-900">Atención requerida</h2>
+                  <p className="mt-1 text-[0.72rem] text-neutral-400">
+                    {attention.length > 0 ? `${attention.length} temas priorizados por impacto operativo` : "No hay alertas críticas registradas"}
+                  </p>
                 </div>
-              ) : <CompactEmpty>No hay obligaciones próximas registradas.</CompactEmpty>}
-            </SectionCard>
-            <SectionCard title="Actividad reciente">
-              <ActivityList items={lastMovements.slice(0, 6)} />
-            </SectionCard>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-            <SectionCard title="Estado productivo" actions={<span className="text-[0.7rem] text-neutral-400">{formatNumber(livestock.totalHeads)} cabezas</span>}>
-              {Object.keys(livestock.byCategory ?? {}).length > 0 ? (
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {Object.entries(livestock.byCategory).map(([category, count]) => (
-                    <div key={category} className="rounded-[12px] app-surface-soft px-3 py-4">
-                      <div className="text-[1.55rem] font-extrabold tracking-[-0.06em] text-neutral-900 tabular-nums">{formatNumber(count)}</div>
-                      <div className="mt-1 text-[0.65rem] font-bold uppercase tracking-[0.1em] text-neutral-400">{CATEGORY_LABEL[category] ?? category}</div>
-                    </div>
-                  ))}
-                </div>
-              ) : <CompactEmpty>Sin registros de hacienda.</CompactEmpty>}
-            </SectionCard>
-            <SectionCard title="Economía del mes">
-              <div className="grid gap-2">
-                <div className="flex items-end justify-between gap-3 border-b app-border pb-3">
-                  <span className="text-[0.7rem] font-bold uppercase tracking-[0.1em] text-neutral-400">Ingresos</span>
-                  <span className="text-[1rem] font-extrabold tabular-nums text-green-700">{formatCurrency(financial.monthlyIncome)}</span>
-                </div>
-                <div className="flex items-end justify-between gap-3 border-b app-border py-3">
-                  <span className="text-[0.7rem] font-bold uppercase tracking-[0.1em] text-neutral-400">Egresos</span>
-                  <span className="text-[1rem] font-extrabold tabular-nums text-[#C0505A]">{formatCurrency(financial.monthlyExpense)}</span>
-                </div>
-                <div className="flex items-end justify-between gap-3 pt-3">
-                  <span className="text-[0.7rem] font-bold uppercase tracking-[0.1em] text-neutral-400">Resultado</span>
-                  <span className={`text-[1rem] font-extrabold tabular-nums ${resultPositive ? "text-green-700" : "text-[#C0505A]"}`}>{formatCurrency(financial.monthlyResult)}</span>
-                </div>
+                <span className="rounded-full bg-[#FEF0F0] px-2.5 py-1 text-[0.65rem] font-extrabold text-[#C0505A]">
+                  {obligations.urgent.length} urgentes
+                </span>
               </div>
-            </SectionCard>
-          </div>
+              <div className="mt-4 grid gap-2">
+                {attention.length > 0 ? attention.map((item) => (
+                  <article key={item.id} className="group flex items-center justify-between gap-3 rounded-[12px] border app-border app-surface-soft px-4 py-3">
+                    <div>
+                      <p className="text-[0.61rem] font-extrabold uppercase tracking-[0.11em] text-green-700">{item.eyebrow}</p>
+                      <h3 className="mt-1 text-[0.8rem] font-extrabold text-neutral-900">{item.title}</h3>
+                      <p className="mt-1 text-[0.7rem] text-neutral-400">{item.detail}</p>
+                    </div>
+                    <span className="text-lg text-neutral-400 transition group-hover:translate-x-1 group-hover:text-green-700">→</span>
+                  </article>
+                )) : <CompactEmpty>Operación sin alertas críticas para hoy.</CompactEmpty>}
+              </div>
+            </section>
 
-          {latestHealthRecords.length > 0 && (
-            <SectionCard title="Sanidad reciente">
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {latestHealthRecords.slice(0, 3).map((record) => (
-                  <div key={record.id} className="rounded-[12px] border app-border app-surface-soft px-3 py-3">
-                    <div className="text-[0.78rem] font-bold text-neutral-900">{TREATMENT_LABEL[record.treatmentType] ?? record.treatmentType}</div>
-                    <div className="mt-1 text-[0.7rem] text-neutral-400">{formatDateShort(record.date)} · {formatNumber(record.quantity)} animales</div>
+            <section className="rounded-card border border-white/10 bg-green-950 p-5 text-white shadow-[0_18px_48px_rgba(16,36,26,0.22)]">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[0.65rem] font-extrabold uppercase tracking-[0.15em] text-white/45">Caja del mes</p>
+                  <p className="mt-5 text-[1.8rem] font-extrabold tracking-[-0.08em] tabular-nums">{formatCurrency(financial.monthlyResult)}</p>
+                  <p className="mt-1 text-[0.7rem] text-white/45">Resultado registrado del período actual</p>
+                </div>
+                <span className="rounded-full bg-accent px-2.5 py-1 text-[0.62rem] font-extrabold text-green-950">{resultPositive ? "POSITIVO" : "REVISAR"}</span>
+              </div>
+              <div className="mt-8 flex h-24 items-end justify-around gap-4">
+                {bars.map((bar) => (
+                  <div key={bar.label} className="flex h-full flex-1 flex-col justify-end gap-2">
+                    <div className={`mx-auto w-full max-w-[58px] rounded-t ${bar.color}`} style={{ height: `${Math.max(12, (bar.value / maxFinancialValue) * 100)}%` }} />
+                    <span className="text-center text-[0.58rem] font-bold uppercase tracking-[0.08em] text-white/40">{bar.label}</span>
                   </div>
                 ))}
               </div>
-            </SectionCard>
-          )}
-        </div>
+            </section>
+          </div>
+
+          <section className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-[12px] border app-border app-surface px-4 py-3">
+              <p className="text-[0.63rem] font-bold uppercase tracking-[0.11em] text-neutral-400">Agricultura</p>
+              <p className="mt-2 text-[1rem] font-extrabold text-neutral-900 tabular-nums">{formatNumber(stock.totalNetStock)} u</p>
+              <p className="mt-1 text-[0.68rem] text-neutral-400">Stock disponible registrado</p>
+            </div>
+            <div className="rounded-[12px] border app-border app-surface px-4 py-3">
+              <p className="text-[0.63rem] font-bold uppercase tracking-[0.11em] text-neutral-400">Ganadería</p>
+              <p className="mt-2 text-[1rem] font-extrabold text-neutral-900 tabular-nums">{formatNumber(livestock.totalHeads)} cabezas</p>
+              <p className="mt-1 text-[0.68rem] text-neutral-400">Rodeo actual</p>
+            </div>
+            <div className="rounded-[12px] border app-border app-surface px-4 py-3">
+              <p className="text-[0.63rem] font-bold uppercase tracking-[0.11em] text-neutral-400">Compromisos</p>
+              <p className="mt-2 text-[1rem] font-extrabold text-neutral-900 tabular-nums">{obligations.pendingCount ?? 0} pendientes</p>
+              <p className="mt-1 text-[0.68rem] text-neutral-400">Obligaciones registradas</p>
+            </div>
+            <div className="rounded-[12px] border app-border app-surface px-4 py-3">
+              <p className="text-[0.63rem] font-bold uppercase tracking-[0.11em] text-neutral-400">Rodeo por categoría</p>
+              <p className="mt-2 text-[1rem] font-extrabold text-neutral-900 tabular-nums">{Object.keys(livestock.byCategory ?? {}).length} categorías</p>
+              <p className="mt-1 truncate text-[0.68rem] text-neutral-400">{Object.entries(livestock.byCategory ?? {}).map(([key, value]) => `${CATEGORY_LABEL[key] ?? key}: ${value}`).join(" · ") || "Sin registros"}</p>
+            </div>
+          </section>
+
+          <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_0.75fr]">
+            <section className="rounded-card border app-border app-surface p-5 app-shadow">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-[0.92rem] font-extrabold tracking-[-0.03em] text-neutral-900">Actividad reciente</h2>
+                <span className="text-[0.68rem] font-bold text-green-700">Últimos movimientos</span>
+              </div>
+              <div className="mt-3"><ActivityList items={lastMovements.slice(0, 5)} /></div>
+            </section>
+
+            <section className="rounded-card border app-border app-surface p-5 app-shadow">
+              <h2 className="text-[0.92rem] font-extrabold tracking-[-0.03em] text-neutral-900">Próximos compromisos</h2>
+              <div className="mt-4 grid gap-3">
+                {commitments.length > 0 ? commitments.map((item) => (
+                  <article key={item.id} className="grid grid-cols-[54px_minmax(0,1fr)] gap-3 border-b app-border pb-3 last:border-0 last:pb-0">
+                    <time className="text-[0.63rem] font-extrabold uppercase tracking-[0.08em] text-green-700" dateTime={item.dueDate}>{formatDateShort(item.dueDate)}</time>
+                    <div>
+                      <h3 className="text-[0.78rem] font-extrabold text-neutral-900">{item.concept}</h3>
+                      <p className="mt-1 text-[0.68rem] text-neutral-400">{formatCurrency(Number(item.amount), item.currency)} · {item.type}</p>
+                    </div>
+                  </article>
+                )) : <CompactEmpty>No hay obligaciones próximas registradas.</CompactEmpty>}
+              </div>
+            </section>
+          </div>
+        </main>
       </div>
     </>
   );

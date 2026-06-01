@@ -100,14 +100,14 @@ export function Sidebar() {
   const navContent = (
     <>
       {/* Logo */}
-      <div className="px-5 pt-6 pb-7">
+      <div className="px-4 pt-5 pb-5">
         <div className="flex items-center gap-2">
           <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
             <path d="M11 2C6 2 2 6 2 11s4 9 9 9 9-4 9-9-4-9-9-9z" fill="#B8D94A" fillOpacity="0.18" />
             <path d="M11 5c0 0-4 3-4 7 0 2.2 1.8 4 4 4s4-1.8 4-4c0-4-4-7-4-7z" fill="#B8D94A" />
             <path d="M11 5v11" stroke="#10241A" strokeWidth="1.5" />
           </svg>
-          <span className="text-accent font-extrabold tracking-[-0.04em] text-[1.1rem] leading-none">
+          <span className="text-accent font-extrabold tracking-[-0.055em] text-[1.05rem] leading-none">
             ATP Agro
           </span>
         </div>
@@ -115,15 +115,15 @@ export function Sidebar() {
           className="text-[0.65rem] font-medium tracking-[0.1em] uppercase mt-0.5 pl-[30px]"
           style={{ color: "#6F8A7A" }}
         >
-          Versión B1
+          Gestión inteligente
         </div>
       </div>
 
-      <div className="px-3 pb-5">
+      <div className="px-3 pb-6">
         <Link
           href="/labores"
           onClick={() => setOpen(false)}
-          className="flex items-center justify-center gap-2 rounded-[11px] bg-accent px-3 py-3 text-[0.78rem] font-extrabold text-green-950 shadow-sm transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+          className="flex items-center justify-center gap-2 rounded-[12px] bg-accent px-3 py-3.5 text-[0.8rem] font-extrabold text-green-950 shadow-[0_10px_28px_rgba(184,217,74,0.18)] transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
         >
           <span className="text-base leading-none">+</span>
           Registrar actividad
@@ -131,7 +131,7 @@ export function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="px-3 flex-1 flex flex-col gap-0.5" role="navigation">
+      <nav className="px-3 flex-1 flex flex-col gap-1" role="navigation">
         <div
           className="text-[0.62rem] font-semibold tracking-[0.12em] uppercase px-2 pb-2"
           style={{ color: "#6F8A7A" }}
@@ -147,10 +147,10 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-3 py-[9px] rounded-lg text-[0.83rem] font-medium transition-all duration-150 no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              className="flex items-center gap-2.5 rounded-[10px] border border-transparent px-3 py-[10px] text-[0.8rem] font-semibold transition-all duration-150 no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               style={
                 isActive
-                  ? { background: "rgba(184, 217, 74, 0.12)", color: "#E9EEE9" }
+                  ? { background: "rgba(184, 217, 74, 0.10)", borderColor: "rgba(184, 217, 74, 0.16)", color: "#B8D94A" }
                   : { color: "#91A99A" }
               }
               onMouseEnter={(e) => {
@@ -191,8 +191,8 @@ export function Sidebar() {
             <Link
               href="/configuracion"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-3 py-[9px] rounded-lg text-[0.83rem] font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              style={isActive ? { background: "rgba(184, 217, 74, 0.12)", color: "#E9EEE9" } : { color: "#91A99A" }}
+              className="flex items-center gap-2.5 rounded-[10px] border border-transparent px-3 py-[10px] text-[0.8rem] font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              style={isActive ? { background: "rgba(184, 217, 74, 0.10)", borderColor: "rgba(184, 217, 74, 0.16)", color: "#B8D94A" } : { color: "#91A99A" }}
               onMouseEnter={(e) => {
                 if (!isActive) {
                   (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)";
@@ -301,7 +301,7 @@ export function Sidebar() {
         className={[
           "flex flex-col shrink-0 min-h-screen transition-transform duration-200",
           "fixed md:relative z-40",
-          "w-[220px]",
+          "w-[256px]",
           open ? "translate-x-0" : "-translate-x-full md:translate-x-0",
         ].join(" ")}
         style={{ background: "#10241A" }}
