@@ -17,6 +17,8 @@ export const config = {
     "/stock/:path*",
     "/finanzas/:path*",
     "/campos/:path*",
+    "/labores/:path*",
+    "/terceros/:path*",
     "/configuracion/:path*",
   ],
 };

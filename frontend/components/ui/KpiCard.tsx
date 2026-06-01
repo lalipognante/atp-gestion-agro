@@ -28,7 +28,7 @@ export function KpiCard({
   return (
     <div
       className={[
-        "bg-white rounded-[14px] border border-gray-200 p-[18px_20px]",
+        "app-surface app-shadow rounded-card border app-border p-[18px_20px]",
         accentBorder ? "border-l-[3px] border-l-accent" : "",
       ]
         .filter(Boolean)
@@ -43,8 +43,8 @@ export function KpiCard({
 
       {/* Value */}
       <div
-        className="text-[1.9rem] font-bold tracking-[-0.03em] font-mono leading-none"
-        style={{ color: valueColor ?? "#1A201A" }}
+        className="text-[1.85rem] font-extrabold tracking-[-0.06em] leading-none text-neutral-900 tabular-nums"
+        style={valueColor ? { color: valueColor } : undefined}
       >
         {value}
       </div>
@@ -54,7 +54,7 @@ export function KpiCard({
         <div className="flex items-center gap-1.5 mt-2">
           <span
             className="text-[0.75rem] font-semibold"
-            style={{ color: trend.direction === "up" ? "#4CAF7D" : "#E07070" }}
+            style={{ color: trend.direction === "up" ? "#1E7A4E" : "#D16B6B" }}
           >
             {trend.direction === "up" ? "↑" : "↓"} {trend.label}
           </span>
@@ -64,8 +64,7 @@ export function KpiCard({
       {/* Progress bar */}
       {progress && (
         <div
-          className="rounded h-[5px] mt-3"
-          style={{ background: "#F0F2EE" }}
+          className="rounded h-[5px] mt-3 app-surface-soft"
           role="progressbar"
           aria-valuenow={progress.value}
           aria-valuemin={0}
@@ -75,7 +74,7 @@ export function KpiCard({
             className="h-[5px] rounded transition-all"
             style={{
               width: `${Math.min(100, Math.max(0, progress.value))}%`,
-              background: progress.color ?? "#4CAF7D",
+              background: progress.color ?? "#1E7A4E",
             }}
           />
         </div>

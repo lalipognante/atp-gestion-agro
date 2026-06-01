@@ -3,6 +3,35 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    color-scheme: light;
+    --app-bg: #F5F7F4;
+    --surface: #FFFFFF;
+    --surface-soft: #F0F3EE;
+    --surface-elevated: #FFFFFF;
+    --text: #1B1F1D;
+    --muted: #68746F;
+    --muted-strong: #4E5C56;
+    --line: #E1E6E2;
+    --deep: #10241A;
+    --brand: #1E7A4E;
+    --lime: #B8D94A;
+    --shadow: 0 14px 38px rgba(16, 36, 26, 0.06);
+  }
+
+  .dark {
+    color-scheme: dark;
+    --app-bg: #0D1512;
+    --surface: #141E19;
+    --surface-soft: #111B17;
+    --surface-elevated: #182620;
+    --text: #E9EEE9;
+    --muted: #9AA59C;
+    --muted-strong: #B6C0B9;
+    --line: #26332C;
+    --shadow: 0 14px 40px rgba(0, 0, 0, 0.2);
+  }
+
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -13,4 +42,10 @@
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
+
+  .app-surface { background: var(--surface); }
+  .app-surface-soft { background: var(--surface-soft); }
+  .app-surface-elevated { background: var(--surface-elevated); }
+  .app-border { border-color: var(--line); }
+  .app-shadow { box-shadow: var(--shadow); }
 }

@@ -166,8 +166,7 @@ function HaciendaCompact({
         return (
           <div
             key={cat}
-            className="flex flex-col items-center justify-center rounded-[10px] py-3 px-2 text-center"
-            style={{ background: "#F7F9F6" }}
+            className="flex flex-col items-center justify-center rounded-[10px] py-3 px-2 text-center app-surface-soft"
           >
             <span
               className="text-[1.6rem] font-bold font-mono leading-none"
@@ -243,12 +242,22 @@ export default async function DashboardPage() {
   return (
     <>
       <Header
-        title="Dashboard"
-        subtitle="Campaña 2024 · Establecimiento La Primavera"
+        title="Inicio"
+        subtitle="Pulso operativo del establecimiento"
       />
 
       <div className="flex-1 overflow-auto">
-        <div className="p-6 lg:p-7 flex flex-col gap-5 max-w-[1400px]">
+        <div className="p-4 sm:p-6 lg:p-7 flex flex-col gap-5 max-w-[1400px]">
+
+          <div className="flex flex-col gap-1">
+            <span className="text-[0.68rem] font-bold uppercase tracking-[0.14em] text-green-700">Resumen operativo</span>
+            <h2 className="text-xl sm:text-2xl font-extrabold tracking-[-0.06em] text-neutral-900">
+              Decisiones del establecimiento, en un solo lugar
+            </h2>
+            <p className="text-[0.82rem] text-neutral-400">
+              Estado actual de producción, compromisos y actividad registrada.
+            </p>
+          </div>
 
           {/* ── Row 1: KPI cards ─────────────────────── */}
           <div
@@ -261,7 +270,7 @@ export default async function DashboardPage() {
               label="Cabezas Hacienda"
               value={formatNumber(livestock.totalHeads)}
               trend={{ direction: "up", label: "rodeo actual" }}
-              progress={{ value: 60, color: "#C8D84B" }}
+              progress={{ value: 60, color: "#B8D94A" }}
             />
             <KpiCard
               label="Stock Granos"
@@ -282,7 +291,7 @@ export default async function DashboardPage() {
               }}
               progress={{
                 value: Math.min(100, (obligations.pendingCount ?? 0) * 10),
-                color: (obligations.pendingCount ?? 0) > 0 ? "#E07070" : "#4CAF7D",
+                color: (obligations.pendingCount ?? 0) > 0 ? "#D16B6B" : "#1E7A4E",
               }}
             />
             <KpiCard
@@ -294,15 +303,15 @@ export default async function DashboardPage() {
               }}
               progress={{
                 value: Math.max(0, resultProgress),
-                color: monthlyResultPositive ? "#4CAF7D" : "#E07070",
+                color: monthlyResultPositive ? "#1E7A4E" : "#D16B6B",
               }}
               accentBorder
-              valueColor={monthlyResultPositive ? "#2E6B52" : "#C0505A"}
+              valueColor={monthlyResultPositive ? "#1E7A4E" : "#C0505A"}
             />
           </div>
 
           {/* ── Row 2: Hacienda compact + Resumen Financiero ── */}
-          <div className="grid gap-3.5" style={{ gridTemplateColumns: "1fr 1fr" }}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
 
             <SectionCard
               title="Stock Hacienda"
@@ -322,8 +331,8 @@ export default async function DashboardPage() {
                   <span className="text-[1.4rem] font-bold font-mono tracking-tight text-green-600">
                     {formatCurrency(financial.monthlyIncome)}
                   </span>
-                  <div className="rounded h-[4px]" style={{ background: "#F0F2EE" }}>
-                    <div className="h-[4px] rounded" style={{ width: "100%", background: "#4CAF7D" }} />
+                  <div className="rounded h-[4px] app-surface-soft">
+                    <div className="h-[4px] rounded" style={{ width: "100%", background: "#1E7A4E" }} />
                   </div>
                 </div>
                 <div className="flex flex-col gap-1">
@@ -331,7 +340,7 @@ export default async function DashboardPage() {
                   <span className="text-[1.4rem] font-bold font-mono tracking-tight" style={{ color: "#E07070" }}>
                     {formatCurrency(financial.monthlyExpense)}
                   </span>
-                  <div className="rounded h-[4px]" style={{ background: "#F0F2EE" }}>
+                  <div className="rounded h-[4px] app-surface-soft">
                     <div
                       className="h-[4px] rounded"
                       style={{
@@ -347,7 +356,7 @@ export default async function DashboardPage() {
                   <span className="text-[0.72rem] text-neutral-400 uppercase tracking-wide">Resultado</span>
                   <span
                     className="text-[1.4rem] font-bold font-mono tracking-tight"
-                    style={{ color: monthlyResultPositive ? "#2E6B52" : "#C0505A" }}
+                    style={{ color: monthlyResultPositive ? "#1E7A4E" : "#C0505A" }}
                   >
                     {formatCurrency(financial.monthlyResult)}
                   </span>
@@ -357,7 +366,7 @@ export default async function DashboardPage() {
           </div>
 
           {/* ── Row 3: Obligaciones + Actividad ──────── */}
-          <div className="grid gap-3.5" style={{ gridTemplateColumns: "1fr 320px" }}>
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] gap-3.5">
 
             <SectionCard
               title="Obligaciones Próximas"
@@ -384,7 +393,7 @@ export default async function DashboardPage() {
           </div>
 
           {/* ── Row 4: Pagos + Sanidad ────────────────── */}
-          <div className="grid gap-3.5" style={{ gridTemplateColumns: "1fr 1fr" }}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
 
             <SectionCard title="Pagos por Método">
               <DataTable<PaymentRow>

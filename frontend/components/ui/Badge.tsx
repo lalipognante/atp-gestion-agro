@@ -12,7 +12,7 @@ const config: Record<Direction, { label: string; classes: string }> = {
   },
   EXPENSE: {
     label: "Egreso",
-    classes: "bg-earth-100 text-earth-600",
+    classes: "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300",
   },
 };
 

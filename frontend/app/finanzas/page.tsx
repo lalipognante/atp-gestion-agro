@@ -360,7 +360,7 @@ export default async function FinanzasPage() {
           className="text-[0.7rem] font-semibold px-2 py-0.5 rounded-full"
           style={
             row._kind === "SUELDO"
-              ? { background: "#EEF4FF", color: "#3B5FBF" }
+              ? { background: "#EEF7F2", color: "#1E7A4E" }
               : { background: "#FFF8EC", color: "#B06A10" }
           }
         >
@@ -409,7 +409,7 @@ export default async function FinanzasPage() {
               label="Ingresos del Mes"
               value={formatCurrency(monthlyIncome)}
               trend={{ direction: "up", label: "mes en curso" }}
-              progress={{ value: 100, color: "#4CAF7D" }}
+              progress={{ value: 100, color: "#1E7A4E" }}
             />
             <KpiCard
               label="Egresos del Mes"
@@ -431,10 +431,10 @@ export default async function FinanzasPage() {
               }}
               progress={{
                 value: Math.max(0, resultProgress),
-                color: resultPositive ? "#4CAF7D" : "#E07070",
+                color: resultPositive ? "#1E7A4E" : "#D16B6B",
               }}
               accentBorder
-              valueColor={resultPositive ? "#2E6B52" : "#C0505A"}
+              valueColor={resultPositive ? "#1E7A4E" : "#C0505A"}
             />
             <KpiCard
               label="Obligaciones Pendientes"

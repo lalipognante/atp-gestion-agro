@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface HeaderProps {
   title: string;
@@ -9,22 +10,21 @@ interface HeaderProps {
 export function Header({ title, subtitle, actions }: HeaderProps) {
   return (
     <header
-      className="sticky top-0 z-10 bg-white border-b border-gray-200 px-7 py-[14px] flex items-center justify-between"
+      className="sticky top-0 z-30 app-surface border-b app-border px-5 py-3.5 pl-16 md:px-7 md:pl-7 flex items-center justify-between gap-4"
       role="banner"
     >
       <div>
-        <h1 className="text-[1.05rem] font-bold text-neutral-900 tracking-tight leading-tight">
+        <h1 className="text-[1.05rem] font-extrabold text-neutral-900 tracking-[-0.03em] leading-tight">
           {title}
         </h1>
         {subtitle && (
-          <p className="text-[0.75rem] text-neutral-400 mt-0.5">{subtitle}</p>
+          <p className="hidden sm:block text-[0.72rem] text-neutral-400 mt-0.5">{subtitle}</p>
         )}
       </div>
-      {actions && (
-        <div className="flex items-center gap-2.5" role="toolbar" aria-label="Acciones">
-          {actions}
-        </div>
-      )}
+      <div className="flex items-center gap-2.5" role="toolbar" aria-label="Acciones">
+        <ThemeToggle />
+        {actions}
+      </div>
     </header>
   );
 }

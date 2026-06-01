@@ -7,11 +7,9 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-neutral-100 text-neutral-900">
       <Sidebar />
-      {/* Spacer for mobile sidebar width */}
-      <div className="md:hidden w-0" />
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-neutral-100 md:ml-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-neutral-100">
         {children}
       </div>
     </div>
