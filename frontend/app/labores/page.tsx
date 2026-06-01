@@ -5,6 +5,7 @@ import { getLots } from "@/services/fields";
 import { Header } from "@/components/layout/Header";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { DataTable, type TableColumn } from "@/components/ui/DataTable";
+import { PageIntro, SummaryMetric } from "@/components/ui/ProductPage";
 import { NuevaLaborInternaDialog } from "@/components/forms/NuevaLaborInternaDialog";
 import { VoidButton } from "@/components/forms/VoidButton";
 import { formatDateShort, formatCurrency, formatNumber } from "@/lib/utils";
@@ -21,8 +22,8 @@ const WORK_TYPE_LABEL: Record<string, string> = {
 const WORK_TYPE_COLOR: Record<string, { bg: string; color: string }> = {
   SIEMBRA:         { bg: "#EEF7F2", color: "#2E6B52" },
   FUMIGACION:      { bg: "#FFF8EC", color: "#B06A10" },
-  COSECHA:         { bg: "#F0F4FF", color: "#3A5AA0" },
-  FERTILIZACION:   { bg: "#F9F0FF", color: "#7A3AAB" },
+  COSECHA:         { bg: "#F3F7E7", color: "#657D1B" },
+  FERTILIZACION:   { bg: "#EEF7F2", color: "#1E7A4E" },
   MOVIMIENTO_SUELO:{ bg: "#F5F0E8", color: "#7A5A1E" },
 };
 
@@ -145,45 +146,31 @@ export default async function LaboresPage() {
       <Header
         title="Labores"
         subtitle="Trabajos internos del establecimiento"
-        actions={<NuevaLaborInternaDialog lots={lots} />}
       />
 
       <div className="flex-1 overflow-auto">
         <div className="p-4 sm:p-6 lg:p-7 flex flex-col gap-5 max-w-[1400px]">
+          <PageIntro
+            eyebrow="Producción"
+            title="Labores propias, con contexto productivo."
+            description="Seguimiento de trabajos realizados por el equipo en cada lote del establecimiento."
+            actions={<NuevaLaborInternaDialog lots={lots} />}
+          />
 
           {/* ── Summary chips ─────────────────────────── */}
-          <div className="flex flex-wrap gap-3">
-            <div className="bg-white rounded-[14px] border border-gray-200 px-4 py-3 flex items-center gap-3">
-              <span className="text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-neutral-400">
-                Total Labores
-              </span>
-              <span className="text-[1.4rem] font-bold font-mono text-neutral-900">
-                {works.filter((w) => !w.deletedAt).length}
-              </span>
-            </div>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <SummaryMetric label="Labores registradas" value={String(works.filter((w) => !w.deletedAt).length)} detail="Trabajos propios" />
             {totalCosto > 0 && (
-              <div className="bg-white rounded-[14px] border border-gray-200 px-4 py-3 flex items-center gap-3">
-                <span className="text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-neutral-400">
-                  Costo Total
-                </span>
-                <span className="text-[1.4rem] font-bold font-mono text-neutral-900">
-                  {formatCurrency(totalCosto)}
-                </span>
-              </div>
+              <SummaryMetric label="Costo registrado" value={formatCurrency(totalCosto)} detail="Labores propias" />
             )}
             {Object.entries(byType).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([type, count]) => (
-              <div key={type} className="bg-white rounded-[14px] border border-gray-200 px-4 py-3 flex items-center gap-3">
-                <span className="text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-neutral-400">
-                  {WORK_TYPE_LABEL[type] ?? type}
-                </span>
-                <span className="text-[1.4rem] font-bold font-mono text-neutral-900">{formatNumber(count)}</span>
-              </div>
+              <SummaryMetric key={type} label={WORK_TYPE_LABEL[type] ?? type} value={formatNumber(count)} detail="Labores realizadas" />
             ))}
           </div>
 
           {/* ── Tabla labores ─────────────────────────── */}
           <SectionCard
-            title="Historial de Labores"
+            title="Bitácora de labores"
             actions={
               works.length > 0 ? (
                 <span className="text-[0.7rem] text-neutral-400">

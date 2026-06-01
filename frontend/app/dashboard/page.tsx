@@ -2,33 +2,16 @@ export const dynamic = "force-dynamic";
 
 import { getDashboardData } from "@/services/dashboard";
 import { Header } from "@/components/layout/Header";
-import { KpiCard } from "@/components/ui/KpiCard";
-import { SectionCard } from "@/components/ui/SectionCard";
-import { DataTable, type TableColumn } from "@/components/ui/DataTable";
 import { ActivityList } from "@/components/ui/ActivityList";
-import { formatCurrency, formatNumber, formatDateShort, formatDate } from "@/lib/utils";
-import type { ObligationItem, HealthRecord } from "@/types";
+import { CompactEmpty, PageIntro, SummaryMetric } from "@/components/ui/ProductPage";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { formatCurrency, formatDateShort, formatNumber } from "@/lib/utils";
 
-// ─── Badge helper ─────────────────────────────────────────
-function ObligationBadge({ status }: { status: ObligationItem["status"] }) {
-  const styles =
-    status === "PENDING"
-      ? { background: "#FEF0F0", color: "#C0505A" }
-      : { background: "#EEF7F2", color: "#2E6B52" };
-  const label = status === "PENDING" ? "Pendiente" : "Pagado";
-  return (
-    <span className="text-[0.7rem] font-semibold px-2 py-0.5 rounded-full" style={styles}>
-      {label}
-    </span>
-  );
-}
-
-const PAYMENT_METHOD_LABEL: Record<string, string> = {
-  CASH: "Efectivo",
-  TRANSFER: "Transferencia",
-  THIRD_PARTY_CHECK: "Cheque Tercero",
-  QUINTALES: "Quintales",
-  OTHER: "Otro",
+const CATEGORY_LABEL: Record<string, string> = {
+  TERNEROS: "Terneros",
+  NOVILLOS: "Novillos",
+  VACAS: "Vacas",
+  TOROS: "Toros",
 };
 
 const TREATMENT_LABEL: Record<string, string> = {
@@ -38,382 +21,160 @@ const TREATMENT_LABEL: Record<string, string> = {
   OTRO: "Otro",
 };
 
-const LIVESTOCK_CATEGORY_LABEL: Record<string, string> = {
-  TERNEROS: "Terneros",
-  NOVILLOS: "Novillos",
-  VACAS: "Vacas",
-  TOROS: "Toros",
-};
-
-const LIVESTOCK_CATEGORY_COLOR: Record<string, string> = {
-  TERNEROS: "#C0705A",
-  NOVILLOS: "#3A8A68",
-  VACAS:    "#3A5AA0",
-  TOROS:    "#7A5A1E",
-};
-
-const OBLIGATION_COLS: TableColumn<ObligationItem>[] = [
-  {
-    key: "concept",
-    header: "Concepto",
-    render: (row) => <span className="font-medium text-neutral-900">{row.concept}</span>,
-  },
-  {
-    key: "dueDate",
-    header: "Vence",
-    render: (row) => (
-      <span className="text-[0.75rem] text-neutral-400 font-mono">{formatDateShort(row.dueDate)}</span>
-    ),
-  },
-  {
-    key: "amount",
-    header: "Monto",
-    align: "right",
-    render: (row) => (
-      <span className="font-mono text-[0.78rem]">{formatCurrency(Number(row.amount), row.currency)}</span>
-    ),
-  },
-  {
-    key: "status",
-    header: "Estado",
-    align: "center",
-    render: (row) => <ObligationBadge status={row.status} />,
-  },
-];
-
-const HEALTH_COLS: TableColumn<HealthRecord>[] = [
-  {
-    key: "date",
-    header: "Fecha",
-    render: (row) => (
-      <span className="text-[0.75rem] text-neutral-400 font-mono">{formatDate(row.date)}</span>
-    ),
-  },
-  {
-    key: "treatmentType",
-    header: "Tratamiento",
-    render: (row) => (
-      <span className="text-[0.82rem] text-neutral-700">
-        {TREATMENT_LABEL[row.treatmentType] ?? row.treatmentType}
-      </span>
-    ),
-  },
-  {
-    key: "quantity",
-    header: "Cant.",
-    align: "right",
-    render: (row) => <span className="font-mono text-[0.82rem]">{formatNumber(row.quantity)}</span>,
-  },
-  {
-    key: "cost",
-    header: "Costo",
-    align: "right",
-    render: (row) => (
-      <span className="font-mono text-[0.78rem] text-neutral-500">
-        {row.cost ? formatCurrency(Number(row.cost)) : "—"}
-      </span>
-    ),
-  },
-];
-
-interface PaymentRow { method: string; total: number; }
-
-const PAYMENT_COLS: TableColumn<PaymentRow>[] = [
-  {
-    key: "method",
-    header: "Método",
-    render: (row) => (
-      <span className="text-[0.82rem] font-medium text-neutral-800">
-        {PAYMENT_METHOD_LABEL[row.method] ?? row.method}
-      </span>
-    ),
-  },
-  {
-    key: "total",
-    header: "Total",
-    align: "right",
-    render: (row) => (
-      <span className="font-mono text-[0.82rem] font-semibold text-neutral-900">
-        {formatCurrency(row.total)}
-      </span>
-    ),
-  },
-];
-
-// ─── Hacienda compact grid ─────────────────────────────────
-function HaciendaCompact({
-  byCategory,
-}: {
-  byCategory: Record<string, number>;
-}) {
-  const entries = Object.entries(byCategory).sort(([, a], [, b]) => b - a);
-
-  if (entries.length === 0) {
-    return (
-      <p className="text-[0.8rem] text-neutral-400 py-3 text-center">
-        Sin registros de hacienda
-      </p>
-    );
-  }
-
+function PageError({ message }: { message: string }) {
   return (
-    <div
-      className="grid gap-2"
-      style={{ gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))" }}
-    >
-      {entries.map(([cat, count]) => {
-        const color = LIVESTOCK_CATEGORY_COLOR[cat] ?? "#374151";
-        return (
-          <div
-            key={cat}
-            className="flex flex-col items-center justify-center rounded-[10px] py-3 px-2 text-center app-surface-soft"
-          >
-            <span
-              className="text-[1.6rem] font-bold font-mono leading-none"
-              style={{ color }}
-            >
-              {formatNumber(count)}
-            </span>
-            <span className="text-[0.68rem] font-semibold uppercase tracking-wide text-neutral-500 mt-1">
-              {LIVESTOCK_CATEGORY_LABEL[cat] ?? cat}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ─── Error UI ─────────────────────────────────────────────
-function DashboardError({ message }: { message: string }) {
-  return (
-    <div className="flex-1 flex items-center justify-center p-10">
-      <div className="text-center max-w-sm">
-        <div
-          className="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-4"
-          style={{ background: "#FEF0F0" }}
-          aria-hidden="true"
-        >
-          <svg width="18" height="18" fill="none" viewBox="0 0 18 18">
-            <path
-              d="M9 6v4M9 13h.01M3 15h12l-6-12-6 12z"
-              stroke="#C0505A"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
-        <p className="text-sm font-semibold text-neutral-900 mb-1">
-          No se pudo cargar el dashboard
-        </p>
-        <p className="text-xs text-neutral-400">{message}</p>
+    <div className="flex flex-1 items-center justify-center p-10">
+      <div className="max-w-sm text-center">
+        <p className="text-sm font-bold text-neutral-900">No se pudo cargar Inicio</p>
+        <p className="mt-1 text-xs text-neutral-400">{message}</p>
       </div>
     </div>
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────
 export default async function DashboardPage() {
   let data;
   try {
     data = await getDashboardData();
   } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Error de conexión con el servidor";
-    return <DashboardError message={message} />;
+    return <PageError message={err instanceof Error ? err.message : "Error de conexión con el servidor"} />;
   }
 
-  const { stock, livestock, financial, obligations, lastMovements, paymentByMethod, latestHealthRecords } = data;
-
-  const allObligations = [...obligations.urgent, ...obligations.upcoming];
-  const monthlyResultPositive = financial.monthlyResult >= 0;
-  const resultProgress = Math.min(
-    100,
-    financial.monthlyIncome > 0
-      ? (financial.monthlyResult / financial.monthlyIncome) * 100
-      : 0
-  );
-
-  const paymentRows: PaymentRow[] = Object.entries(paymentByMethod ?? {})
-    .map(([method, total]) => ({ method, total }))
-    .sort((a, b) => b.total - a.total);
+  const { stock, livestock, financial, obligations, lastMovements, latestHealthRecords } = data;
+  const commitments = [...obligations.urgent, ...obligations.upcoming];
+  const resultPositive = financial.monthlyResult >= 0;
+  const today = new Intl.DateTimeFormat("es-AR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(new Date());
+  const attention = [
+    ...obligations.urgent.slice(0, 2).map((item) => ({
+      id: item.id,
+      label: "Vencimiento prioritario",
+      title: item.concept,
+      detail: `${formatCurrency(Number(item.amount), item.currency)} · vence ${formatDateShort(item.dueDate)}`,
+    })),
+    ...(stock.totalNetStock < 0
+      ? [{
+          id: "stock-negative",
+          label: "Control de stock",
+          title: "El stock neto requiere revisión",
+          detail: `${formatNumber(stock.totalNetStock)} unidades registradas`,
+        }]
+      : []),
+  ];
 
   return (
     <>
-      <Header
-        title="Inicio"
-        subtitle="Pulso operativo del establecimiento"
-      />
-
+      <Header title="Inicio" subtitle="Pulso operativo del establecimiento" />
       <div className="flex-1 overflow-auto">
-        <div className="p-4 sm:p-6 lg:p-7 flex flex-col gap-5 max-w-[1400px]">
+        <div className="mx-auto flex max-w-[1480px] flex-col gap-5 p-4 sm:p-6 lg:p-7">
+          <PageIntro
+            eyebrow={today}
+            title="Buen día. Este es el pulso de La Primavera."
+            description="Lo importante para decidir hoy: compromisos, caja del mes, producción y movimientos recientes."
+          />
 
-          <div className="flex flex-col gap-1">
-            <span className="text-[0.68rem] font-bold uppercase tracking-[0.14em] text-green-700">Resumen operativo</span>
-            <h2 className="text-xl sm:text-2xl font-extrabold tracking-[-0.06em] text-neutral-900">
-              Decisiones del establecimiento, en un solo lugar
-            </h2>
-            <p className="text-[0.82rem] text-neutral-400">
-              Estado actual de producción, compromisos y actividad registrada.
-            </p>
+          <section className="rounded-card border border-green-800 bg-green-950 p-5 text-white app-shadow">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="lg:max-w-[300px]">
+                <div className="text-[0.66rem] font-extrabold uppercase tracking-[0.15em] text-accent">Morning brief</div>
+                <h3 className="mt-2 text-xl font-extrabold tracking-[-0.06em]">Atención requerida</h3>
+                <p className="mt-1 text-[0.78rem] leading-5 text-white/60">
+                  {attention.length > 0
+                    ? `${attention.length} tema${attention.length !== 1 ? "s" : ""} para revisar antes de avanzar.`
+                    : "No hay urgencias críticas registradas para hoy."}
+                </p>
+              </div>
+              <div className="grid flex-1 gap-2 lg:max-w-[820px] lg:grid-cols-2">
+                {attention.length > 0 ? attention.map((item) => (
+                  <div key={item.id} className="rounded-[12px] border border-white/10 bg-white/[0.06] px-4 py-3">
+                    <div className="text-[0.62rem] font-extrabold uppercase tracking-[0.12em] text-accent">{item.label}</div>
+                    <div className="mt-1 text-[0.82rem] font-bold">{item.title}</div>
+                    <div className="mt-1 text-[0.7rem] text-white/55">{item.detail}</div>
+                  </div>
+                )) : (
+                  <div className="rounded-[12px] border border-white/10 bg-white/[0.06] px-4 py-3 lg:col-span-2">
+                    <div className="text-[0.82rem] font-bold">Operación sin alertas críticas</div>
+                    <div className="mt-1 text-[0.7rem] text-white/55">Podés concentrarte en los próximos compromisos y movimientos del establecimiento.</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <SummaryMetric label="Resultado del mes" value={formatCurrency(financial.monthlyResult)} detail={resultPositive ? "Balance positivo" : "Balance negativo"} tone={resultPositive ? "positive" : "danger"} />
+            <SummaryMetric label="Compromisos" value={String(obligations.pendingCount ?? 0)} detail="Obligaciones pendientes" tone={(obligations.pendingCount ?? 0) > 0 ? "warning" : "positive"} />
+            <SummaryMetric label="Hacienda" value={formatNumber(livestock.totalHeads)} detail="Cabezas en rodeo" />
+            <SummaryMetric label="Stock disponible" value={`${formatNumber(stock.totalNetStock)} u`} detail="Stock neto registrado" tone={stock.totalNetStock < 0 ? "danger" : "default"} />
           </div>
 
-          {/* ── Row 1: KPI cards ─────────────────────── */}
-          <div
-            className="grid gap-3.5"
-            style={{ gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))" }}
-            role="region"
-            aria-label="Indicadores principales"
-          >
-            <KpiCard
-              label="Cabezas Hacienda"
-              value={formatNumber(livestock.totalHeads)}
-              trend={{ direction: "up", label: "rodeo actual" }}
-              progress={{ value: 60, color: "#B8D94A" }}
-            />
-            <KpiCard
-              label="Stock Granos"
-              value={`${formatNumber(stock.totalNetStock)} u`}
-              trend={
-                stock.totalNetStock >= 0
-                  ? { direction: "up", label: "stock disponible" }
-                  : { direction: "down", label: "stock negativo" }
-              }
-              progress={{ value: stock.totalNetStock > 0 ? 50 : 0, color: "#E07070" }}
-            />
-            <KpiCard
-              label="Obligaciones Pendientes"
-              value={String(obligations.pendingCount ?? 0)}
-              trend={{
-                direction: (obligations.pendingCount ?? 0) > 0 ? "down" : "up",
-                label: (obligations.pendingCount ?? 0) > 0 ? "por cancelar" : "al día",
-              }}
-              progress={{
-                value: Math.min(100, (obligations.pendingCount ?? 0) * 10),
-                color: (obligations.pendingCount ?? 0) > 0 ? "#D16B6B" : "#1E7A4E",
-              }}
-            />
-            <KpiCard
-              label="Resultado del Mes"
-              value={formatCurrency(financial.monthlyResult)}
-              trend={{
-                direction: monthlyResultPositive ? "up" : "down",
-                label: monthlyResultPositive ? "positivo" : "negativo",
-              }}
-              progress={{
-                value: Math.max(0, resultProgress),
-                color: monthlyResultPositive ? "#1E7A4E" : "#D16B6B",
-              }}
-              accentBorder
-              valueColor={monthlyResultPositive ? "#1E7A4E" : "#C0505A"}
-            />
-          </div>
-
-          {/* ── Row 2: Hacienda compact + Resumen Financiero ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
-
-            <SectionCard
-              title="Stock Hacienda"
-              actions={
-                <span className="text-[0.7rem] text-neutral-400">
-                  {formatNumber(livestock.totalHeads)} cabezas
-                </span>
-              }
-            >
-              <HaciendaCompact byCategory={livestock.byCategory ?? {}} />
+          <div className="grid grid-cols-1 gap-3.5 xl:grid-cols-[minmax(0,1fr)_340px]">
+            <SectionCard title="Próximos compromisos" actions={<span className="text-[0.7rem] text-neutral-400">{commitments.length} próximos</span>}>
+              {commitments.length > 0 ? (
+                <div className="divide-y app-border">
+                  {commitments.map((item) => (
+                    <div key={item.id} className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <div className="text-[0.82rem] font-bold text-neutral-900">{item.concept}</div>
+                        <div className="mt-1 text-[0.7rem] text-neutral-400">Vence {formatDateShort(item.dueDate)} · {item.type}</div>
+                      </div>
+                      <div className="text-[0.82rem] font-extrabold tabular-nums text-neutral-900">{formatCurrency(Number(item.amount), item.currency)}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : <CompactEmpty>No hay obligaciones próximas registradas.</CompactEmpty>}
             </SectionCard>
+            <SectionCard title="Actividad reciente">
+              <ActivityList items={lastMovements.slice(0, 6)} />
+            </SectionCard>
+          </div>
 
-            <SectionCard title="Resumen del Mes">
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1">
-                  <span className="text-[0.72rem] text-neutral-400 uppercase tracking-wide">Ingresos</span>
-                  <span className="text-[1.4rem] font-bold font-mono tracking-tight text-green-600">
-                    {formatCurrency(financial.monthlyIncome)}
-                  </span>
-                  <div className="rounded h-[4px] app-surface-soft">
-                    <div className="h-[4px] rounded" style={{ width: "100%", background: "#1E7A4E" }} />
-                  </div>
+          <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+            <SectionCard title="Estado productivo" actions={<span className="text-[0.7rem] text-neutral-400">{formatNumber(livestock.totalHeads)} cabezas</span>}>
+              {Object.keys(livestock.byCategory ?? {}).length > 0 ? (
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {Object.entries(livestock.byCategory).map(([category, count]) => (
+                    <div key={category} className="rounded-[12px] app-surface-soft px-3 py-4">
+                      <div className="text-[1.55rem] font-extrabold tracking-[-0.06em] text-neutral-900 tabular-nums">{formatNumber(count)}</div>
+                      <div className="mt-1 text-[0.65rem] font-bold uppercase tracking-[0.1em] text-neutral-400">{CATEGORY_LABEL[category] ?? category}</div>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-[0.72rem] text-neutral-400 uppercase tracking-wide">Egresos</span>
-                  <span className="text-[1.4rem] font-bold font-mono tracking-tight" style={{ color: "#E07070" }}>
-                    {formatCurrency(financial.monthlyExpense)}
-                  </span>
-                  <div className="rounded h-[4px] app-surface-soft">
-                    <div
-                      className="h-[4px] rounded"
-                      style={{
-                        width: financial.monthlyIncome > 0
-                          ? `${Math.min(100, (financial.monthlyExpense / financial.monthlyIncome) * 100)}%`
-                          : "0%",
-                        background: "#E07070",
-                      }}
-                    />
-                  </div>
+              ) : <CompactEmpty>Sin registros de hacienda.</CompactEmpty>}
+            </SectionCard>
+            <SectionCard title="Economía del mes">
+              <div className="grid gap-2">
+                <div className="flex items-end justify-between gap-3 border-b app-border pb-3">
+                  <span className="text-[0.7rem] font-bold uppercase tracking-[0.1em] text-neutral-400">Ingresos</span>
+                  <span className="text-[1rem] font-extrabold tabular-nums text-green-700">{formatCurrency(financial.monthlyIncome)}</span>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-[0.72rem] text-neutral-400 uppercase tracking-wide">Resultado</span>
-                  <span
-                    className="text-[1.4rem] font-bold font-mono tracking-tight"
-                    style={{ color: monthlyResultPositive ? "#1E7A4E" : "#C0505A" }}
-                  >
-                    {formatCurrency(financial.monthlyResult)}
-                  </span>
+                <div className="flex items-end justify-between gap-3 border-b app-border py-3">
+                  <span className="text-[0.7rem] font-bold uppercase tracking-[0.1em] text-neutral-400">Egresos</span>
+                  <span className="text-[1rem] font-extrabold tabular-nums text-[#C0505A]">{formatCurrency(financial.monthlyExpense)}</span>
+                </div>
+                <div className="flex items-end justify-between gap-3 pt-3">
+                  <span className="text-[0.7rem] font-bold uppercase tracking-[0.1em] text-neutral-400">Resultado</span>
+                  <span className={`text-[1rem] font-extrabold tabular-nums ${resultPositive ? "text-green-700" : "text-[#C0505A]"}`}>{formatCurrency(financial.monthlyResult)}</span>
                 </div>
               </div>
             </SectionCard>
           </div>
 
-          {/* ── Row 3: Obligaciones + Actividad ──────── */}
-          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] gap-3.5">
-
-            <SectionCard
-              title="Obligaciones Próximas"
-              actions={
-                allObligations.length > 0 ? (
-                  <span className="text-[0.7rem] text-neutral-400">
-                    {obligations.urgent.length} urgente
-                    {obligations.urgent.length !== 1 ? "s" : ""}
-                  </span>
-                ) : undefined
-              }
-            >
-              <DataTable<ObligationItem>
-                columns={OBLIGATION_COLS}
-                rows={allObligations}
-                getRowKey={(row) => row.id}
-                emptyMessage="Sin obligaciones próximas"
-              />
+          {latestHealthRecords.length > 0 && (
+            <SectionCard title="Sanidad reciente">
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {latestHealthRecords.slice(0, 3).map((record) => (
+                  <div key={record.id} className="rounded-[12px] border app-border app-surface-soft px-3 py-3">
+                    <div className="text-[0.78rem] font-bold text-neutral-900">{TREATMENT_LABEL[record.treatmentType] ?? record.treatmentType}</div>
+                    <div className="mt-1 text-[0.7rem] text-neutral-400">{formatDateShort(record.date)} · {formatNumber(record.quantity)} animales</div>
+                  </div>
+                ))}
+              </div>
             </SectionCard>
-
-            <SectionCard title="Actividad Reciente">
-              <ActivityList items={lastMovements} />
-            </SectionCard>
-          </div>
-
-          {/* ── Row 4: Pagos + Sanidad ────────────────── */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
-
-            <SectionCard title="Pagos por Método">
-              <DataTable<PaymentRow>
-                columns={PAYMENT_COLS}
-                rows={paymentRows}
-                getRowKey={(row) => row.method}
-                emptyMessage="Sin pagos con método registrado"
-              />
-            </SectionCard>
-
-            <SectionCard title="Últimos Registros Sanitarios">
-              <DataTable<HealthRecord>
-                columns={HEALTH_COLS}
-                rows={latestHealthRecords ?? []}
-                getRowKey={(row) => row.id}
-                emptyMessage="Sin registros sanitarios"
-              />
-            </SectionCard>
-          </div>
-
+          )}
         </div>
       </div>
     </>

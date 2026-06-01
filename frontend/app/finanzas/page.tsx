@@ -8,6 +8,7 @@ import { Header } from "@/components/layout/Header";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { DataTable, type TableColumn } from "@/components/ui/DataTable";
+import { PageIntro } from "@/components/ui/ProductPage";
 import { NuevoFinancieroDialog } from "@/components/forms/NuevoFinancieroDialog";
 import { NuevaObligacionDialog } from "@/components/forms/NuevaObligacionDialog";
 import { MarcarPagadaButton } from "@/components/forms/MarcarPagadaButton";
@@ -392,11 +393,40 @@ export default async function FinanzasPage() {
       <Header
         title="Finanzas"
         subtitle="Movimientos financieros del establecimiento"
-        actions={<NuevoFinancieroDialog campaigns={campaigns} />}
       />
 
       <div className="flex-1 overflow-auto">
         <div className="p-6 lg:p-7 flex flex-col gap-5 max-w-[1400px]">
+          <PageIntro
+            eyebrow="Economía"
+            title="Caja, compromisos y pagos del establecimiento."
+            description="Una lectura ordenada del mes: qué ingresó, qué salió y qué obligaciones requieren seguimiento."
+            actions={<NuevoFinancieroDialog campaigns={campaigns} />}
+          />
+
+          <section className="rounded-card border border-green-800 bg-green-950 p-5 text-white app-shadow">
+            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:items-end">
+              <div>
+                <div className="text-[0.66rem] font-extrabold uppercase tracking-[0.15em] text-accent">Resultado del mes</div>
+                <div className={`mt-2 text-[2rem] font-extrabold tracking-[-0.08em] tabular-nums ${resultPositive ? "text-white" : "text-[#F1A2A2]"}`}>{formatCurrency(monthlyResult)}</div>
+                <div className="mt-1 text-[0.75rem] text-white/55">{resultPositive ? "Balance positivo del período actual" : "El balance del período requiere atención"}</div>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-3">
+                <div className="rounded-[12px] border border-white/10 bg-white/[0.06] px-4 py-3">
+                  <div className="text-[0.62rem] font-extrabold uppercase tracking-[0.12em] text-white/50">Ingresos</div>
+                  <div className="mt-2 text-[1rem] font-extrabold tabular-nums text-accent">{formatCurrency(monthlyIncome)}</div>
+                </div>
+                <div className="rounded-[12px] border border-white/10 bg-white/[0.06] px-4 py-3">
+                  <div className="text-[0.62rem] font-extrabold uppercase tracking-[0.12em] text-white/50">Egresos</div>
+                  <div className="mt-2 text-[1rem] font-extrabold tabular-nums text-[#F1A2A2]">{formatCurrency(monthlyExpense)}</div>
+                </div>
+                <div className="rounded-[12px] border border-white/10 bg-white/[0.06] px-4 py-3">
+                  <div className="text-[0.62rem] font-extrabold uppercase tracking-[0.12em] text-white/50">A pagar</div>
+                  <div className="mt-2 text-[1rem] font-extrabold tabular-nums text-white">{formatCurrency(totalPending)}</div>
+                </div>
+              </div>
+            </div>
+          </section>
 
           {/* ── KPI Row ─────────────────────────────────── */}
           <div
@@ -453,7 +483,7 @@ export default async function FinanzasPage() {
 
           {/* ── Movements Table ──────────────────────────── */}
           <SectionCard
-            title="Todos los Movimientos"
+            title="Actividad financiera reciente"
             actions={
               movements.length > 0 ? (
                 <span className="text-[0.7rem] text-neutral-400">
@@ -472,7 +502,7 @@ export default async function FinanzasPage() {
 
           {/* ── Obligaciones ─────────────────────────────── */}
           <SectionCard
-            title="Obligaciones"
+            title="Cuentas a pagar"
             actions={
               <div className="flex items-center gap-2.5">
                 {obligations.length > 0 && (

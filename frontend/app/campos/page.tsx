@@ -5,6 +5,7 @@ import { getLeaseContracts } from "@/services/leaseContracts";
 import { Header } from "@/components/layout/Header";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { DataTable, type TableColumn } from "@/components/ui/DataTable";
+import { PageIntro } from "@/components/ui/ProductPage";
 import { NuevoCampoDialog } from "@/components/forms/NuevoCampoDialog";
 import { NuevoLoteDialog } from "@/components/forms/NuevoLoteDialog";
 import { NuevoContratoDialog } from "@/components/forms/NuevoContratoDialog";
@@ -252,16 +253,16 @@ export default async function CamposPage() {
       <Header
         title="Campos & Lotes"
         subtitle="Estructura predial del establecimiento"
-        actions={
-          <>
-            <NuevoLoteDialog fields={fields} />
-            <NuevoCampoDialog />
-          </>
-        }
       />
 
       <div className="flex-1 overflow-auto">
         <div className="p-4 sm:p-6 lg:p-7 flex flex-col gap-5 max-w-[1400px]">
+          <PageIntro
+            eyebrow="Establecimiento"
+            title="La tierra, los lotes y sus compromisos."
+            description="Superficie productiva, contratos de alquiler y entregas en quintales en una misma lectura."
+            actions={<><NuevoLoteDialog fields={fields} /><NuevoCampoDialog /></>}
+          />
 
           {/* ── Summary chips ────────────────────────── */}
           <div className="flex gap-3 flex-wrap">
@@ -286,7 +287,7 @@ export default async function CamposPage() {
           </div>
 
           {/* ── Lotes + Contratos (2 columnas) ──────── */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
+          <div className="grid grid-cols-1 gap-5 items-start xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
             <SectionCard
               title="Lotes por Campo"
               actions={

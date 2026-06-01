@@ -14,7 +14,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   {
     href: "/dashboard",
-    label: "Dashboard",
+    label: "Inicio",
     icon: (
       <svg width="15" height="15" fill="none" viewBox="0 0 15 15" aria-hidden="true">
         <rect x="1" y="1" width="5.5" height="5.5" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
@@ -55,7 +55,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     href: "/finanzas",
-    label: "Finanzas",
+    label: "Economía",
     icon: (
       <svg width="15" height="15" fill="none" viewBox="0 0 15 15" aria-hidden="true">
         <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" strokeWidth="1.4" />

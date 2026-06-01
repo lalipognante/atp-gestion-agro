@@ -5,6 +5,7 @@ import { getLots } from "@/services/fields";
 import { Header } from "@/components/layout/Header";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { DataTable, type TableColumn } from "@/components/ui/DataTable";
+import { PageIntro, SummaryMetric } from "@/components/ui/ProductPage";
 import { RegistrarLaborDialog } from "@/components/forms/RegistrarLaborDialog";
 import { VoidButton } from "@/components/forms/VoidButton";
 import { formatNumber, formatDateShort, formatCurrency } from "@/lib/utils";
@@ -63,7 +64,7 @@ const LABOR_COLS: TableColumn<ThirdPartyWork>[] = [
     render: (row) => (
       <span
         className="text-[0.7rem] font-semibold px-2 py-0.5 rounded-full"
-        style={{ background: "#F0F4FF", color: "#3A5AA0" }}
+        style={{ background: "#EEF7F2", color: "#1E7A4E" }}
       >
         {WORK_TYPE_LABEL[row.workType] ?? row.workType}
       </span>
@@ -169,52 +170,41 @@ export default async function TercerosPage() {
   return (
     <>
       <Header
-        title="Servicios de Terceros"
-        subtitle="Labores contratadas externos"
-        actions={<RegistrarLaborDialog lots={lots} />}
+        title="Terceros"
+        subtitle="Red operativa del establecimiento"
       />
 
       <div className="flex-1 overflow-auto">
         <div className="p-4 sm:p-6 lg:p-7 flex flex-col gap-5 max-w-[1400px]">
+          <PageIntro
+            eyebrow="Red operativa"
+            title="Contratistas y servicios que mueven la producción."
+            description="Trabajos externos, deuda pendiente y actividad reciente organizados por tercero."
+            actions={<RegistrarLaborDialog lots={lots} />}
+          />
 
           {/* ── Summary chips ─────────────────────────── */}
-          <div className="flex flex-wrap gap-3">
-            <div className="bg-white rounded-[14px] border border-gray-200 px-4 py-3 flex items-center gap-3">
-              <span className="text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-neutral-400">
-                Deuda Pendiente
-              </span>
-              <span
-                className="text-[1.3rem] font-bold font-mono"
-                style={{ color: totalDeuda > 0 ? "#C0505A" : "#2E6B52" }}
-              >
-                ${formatNumber(totalDeuda)}
-              </span>
-            </div>
-            <div className="bg-white rounded-[14px] border border-gray-200 px-4 py-3 flex items-center gap-3">
-              <span className="text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-neutral-400">
-                Labores Pendientes
-              </span>
-              <span className="text-[1.3rem] font-bold font-mono text-neutral-900">
-                {pendingWorks.length}
-              </span>
-            </div>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <SummaryMetric label="Deuda pendiente" value={formatCurrency(totalDeuda)} detail="Servicios externos" tone={totalDeuda > 0 ? "danger" : "positive"} />
+            <SummaryMetric label="Labores pendientes" value={String(pendingWorks.length)} detail="Requieren seguimiento" tone={pendingWorks.length > 0 ? "warning" : "positive"} />
+            <SummaryMetric label="Contratistas activos" value={String(Object.keys(byContractor).length)} detail="Con saldo pendiente" />
+            <SummaryMetric label="Trabajos registrados" value={String(works.length)} detail="Historial externo" />
           </div>
 
           {/* ── Por proveedor ─────────────────────────── */}
           {Object.keys(byContractor).length > 0 && (
-            <SectionCard title="Deuda por Proveedor">
-              <div className="flex flex-wrap gap-2 p-2">
+            <SectionCard title="Contratistas con saldo pendiente">
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {Object.entries(byContractor)
                   .sort((a, b) => b[1] - a[1])
                   .map(([contractor, amount]) => (
                     <div
                       key={contractor}
-                      className="flex items-center gap-2 bg-neutral-50 border border-gray-200 rounded-lg px-3 py-2"
+                      className="rounded-[12px] border app-border app-surface-soft px-4 py-3"
                     >
-                      <span className="text-[0.78rem] font-medium text-neutral-700">{contractor}</span>
-                      <span className="text-[0.78rem] font-mono font-bold" style={{ color: "#C0505A" }}>
-                        ${formatNumber(amount)}
-                      </span>
+                      <div className="text-[0.82rem] font-bold text-neutral-900">{contractor}</div>
+                      <div className="mt-2 text-[0.65rem] font-bold uppercase tracking-[0.1em] text-neutral-400">Saldo a pagar</div>
+                      <div className="mt-1 text-[1rem] font-extrabold tabular-nums text-[#C0505A]">{formatCurrency(amount)}</div>
                     </div>
                   ))}
               </div>
@@ -223,7 +213,7 @@ export default async function TercerosPage() {
 
           {/* ── Tabla labores ─────────────────────────── */}
           <SectionCard
-            title="Labores Externas"
+            title="Historial de servicios externos"
             actions={
               works.length > 0 ? (
                 <span className="text-[0.7rem] text-neutral-400">
