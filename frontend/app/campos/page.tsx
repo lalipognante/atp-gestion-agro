@@ -21,8 +21,8 @@ function FieldTypeBadge({ type }: { type: string }) {
       className="text-[0.7rem] font-semibold px-2 py-0.5 rounded-full"
       style={
         isPropio
-          ? { background: "#EEF7F2", color: "#2E6B52" }
-          : { background: "#F0F4FF", color: "#3A5AA0" }
+          ? { background: "#EEF7F2", color: "#1E7A4E" }
+          : { background: "#F3F7E7", color: "#657D1B" }
       }
     >
       {isPropio ? "Propio" : "Alquilado"}
@@ -168,9 +168,9 @@ function LeaseSection({ contracts, fields }: { contracts: LeaseContract[]; field
             ];
 
             return (
-              <div key={c.id} className="border border-gray-200 rounded-[12px] p-4">
+              <div key={c.id} className="border app-border app-surface-soft rounded-[12px] p-4">
                 {/* Contract header */}
-                <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
                   <div>
                     <div className="font-semibold text-[0.9rem] text-neutral-900">
                       {c.field?.name ?? "—"} — {c.year}
@@ -179,7 +179,7 @@ function LeaseSection({ contracts, fields }: { contracts: LeaseContract[]; field
                       <div className="text-[0.75rem] text-neutral-500 mt-0.5">{c.notes}</div>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
                     {!c.deletedAt && <RegistrarEntregaDialog contractId={c.id} />}
                     {!c.deletedAt && <VoidButton id={c.id} action="campos-contract-void" label="Anular Contrato" />}
                     {c.deletedAt && <span className="text-[0.72rem] text-red-400 italic">Anulado</span>}
@@ -190,15 +190,15 @@ function LeaseSection({ contracts, fields }: { contracts: LeaseContract[]; field
                 <div className="mb-3">
                   <div className="flex justify-between text-[0.72rem] text-neutral-500 mb-1">
                     <span>Entregado: {formatNumber(delivered)} qq</span>
-                    <span>Saldo: <strong style={{ color: remaining > 0 ? "#B06A10" : "#2E6B52" }}>{formatNumber(remaining)} qq</strong></span>
+                    <span>Saldo: <strong style={{ color: remaining > 0 ? "#B06A10" : "#1E7A4E" }}>{formatNumber(remaining)} qq</strong></span>
                     <span>Total: {formatNumber(Number(c.totalQuintales))} qq</span>
                   </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-2 app-surface rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all"
                       style={{
                         width: `${progress}%`,
-                        background: progress >= 100 ? "#2E6B52" : "#4CAF7D",
+                        background: progress >= 100 ? "#1E7A4E" : "#B8D94A",
                       }}
                     />
                   </div>
@@ -241,6 +241,11 @@ export default async function CamposPage() {
   const totalHa = lots.reduce((acc, l) => acc + Number(l.surfaceHa), 0);
   const fieldIds = new Set(lots.map((l) => l.fieldId));
   const alquiladoFields = fields.filter((f) => f.type === "ALQUILADO");
+  const pendingQuintales = contracts.reduce((total, contract) => {
+    if (contract.deletedAt) return total;
+    const delivered = contract.deliveries.reduce((sum, delivery) => sum + Number(delivery.quintales), 0);
+    return total + Math.max(0, Number(contract.totalQuintales) - delivered);
+  }, 0);
 
   return (
     <>
@@ -260,31 +265,28 @@ export default async function CamposPage() {
 
           {/* ── Summary chips ────────────────────────── */}
           <div className="flex gap-3 flex-wrap">
-            <div className="bg-white rounded-[14px] border border-gray-200 px-4 py-3 flex items-center gap-3">
+            <div className="app-surface app-shadow rounded-card border app-border px-4 py-3 flex items-center gap-3">
               <span className="text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-neutral-400">Campos</span>
-              <span className="text-[1.4rem] font-bold font-mono text-neutral-900">{fields.length}</span>
+              <span className="text-[1.4rem] font-extrabold tabular-nums text-neutral-900">{fields.length}</span>
             </div>
-            <div className="bg-white rounded-[14px] border border-gray-200 px-4 py-3 flex items-center gap-3">
+            <div className="app-surface app-shadow rounded-card border app-border px-4 py-3 flex items-center gap-3">
               <span className="text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-neutral-400">Lotes</span>
-              <span className="text-[1.4rem] font-bold font-mono text-neutral-900">{lots.length}</span>
+              <span className="text-[1.4rem] font-extrabold tabular-nums text-neutral-900">{lots.length}</span>
             </div>
-            <div className="bg-white rounded-[14px] border border-gray-200 px-4 py-3 flex items-center gap-3">
+            <div className="app-surface app-shadow rounded-card border app-border px-4 py-3 flex items-center gap-3">
               <span className="text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-neutral-400">Superficie Total</span>
-              <span className="text-[1.4rem] font-bold font-mono text-neutral-900">{formatNumber(totalHa)} ha</span>
+              <span className="text-[1.4rem] font-extrabold tabular-nums text-neutral-900">{formatNumber(totalHa)} ha</span>
             </div>
             {alquiladoFields.length > 0 && (
-              <div className="bg-white rounded-[14px] border border-gray-200 px-4 py-3 flex items-center gap-3">
-                <span className="text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-neutral-400">Alquilados</span>
-                <span className="text-[1.4rem] font-bold font-mono" style={{ color: "#3A5AA0" }}>{alquiladoFields.length}</span>
+              <div className="app-surface app-shadow rounded-card border app-border px-4 py-3 flex items-center gap-3">
+                <span className="text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-neutral-400">Saldo Alquiler</span>
+                <span className="text-[1.4rem] font-extrabold tabular-nums" style={{ color: "#657D1B" }}>{formatNumber(pendingQuintales)} qq</span>
               </div>
             )}
           </div>
 
           {/* ── Lotes + Contratos (2 columnas) ──────── */}
-          <div
-            className="grid gap-5 items-start"
-            style={{ gridTemplateColumns: "1fr 1fr" }}
-          >
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
             <SectionCard
               title="Lotes por Campo"
               actions={

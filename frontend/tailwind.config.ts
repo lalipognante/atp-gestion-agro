@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -11,41 +12,43 @@ const config: Config = {
       colors: {
         // ── Agro green scale (from HTML mockup) ──────────────
         green: {
-          950: "#0B2218",
-          900: "#122F21",
-          800: "#1A4030",
-          700: "#235440",
-          600: "#2E6B52",
-          500: "#3A8A68",
-          400: "#52A882",
-          300: "#7DC4A4",
-          100: "#D6EDE4",
-          50:  "#EEF7F2",
+          950: "#10241A",
+          900: "#143022",
+          800: "#185B3C",
+          700: "#1E7A4E",
+          600: "#23935C",
+          500: "#2BAA69",
+          400: "#59BF86",
+          300: "#8AD3A9",
+          100: "#DCEFE3",
+          50:  "#EFF7F1",
         },
         // ── Accent ───────────────────────────────────────────
         accent: {
-          DEFAULT: "#4CAF7D",
-          yellow:  "#C8D84B",
+          DEFAULT: "#B8D94A",
+          yellow:  "#B8D94A",
         },
         // ── Neutral surface scale ────────────────────────────
         neutral: {
-          50:  "#F8F9F7",
-          100: "#F0F2EE",
-          200: "#E1E5DF",
-          400: "#9AA49A",
-          600: "#5A6659",
-          800: "#2D3530",
-          900: "#1A201A",
+          50:  "var(--surface-soft)",
+          100: "var(--app-bg)",
+          200: "var(--line)",
+          400: "var(--muted)",
+          500: "var(--muted)",
+          600: "var(--muted-strong)",
+          700: "var(--text)",
+          800: "var(--text)",
+          900: "var(--text)",
         },
       },
       fontFamily: {
-        sans:    ["var(--font-dm-sans)", "system-ui", "sans-serif"],
+        sans:    ["var(--font-jakarta)", "system-ui", "sans-serif"],
         mono:    ["var(--font-dm-mono)", "ui-monospace", "monospace"],
-        display: ["var(--font-dm-serif)", "Georgia", "serif"],
+        display: ["var(--font-jakarta)", "system-ui", "sans-serif"],
       },
       borderRadius: {
-        card: "14px",
-        btn:  "8px",
+        card: "16px",
+        btn:  "10px",
       },
     },
   },

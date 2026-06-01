@@ -44,7 +44,7 @@ export function DataTable<T>({
                 key={col.key}
                 scope="col"
                 className={[
-                  "text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-neutral-400 py-[10px] px-[14px] border-b border-gray-200 whitespace-nowrap",
+                  "text-[0.65rem] font-bold uppercase tracking-[0.1em] text-neutral-400 py-[10px] px-[14px] border-b app-border whitespace-nowrap",
                   alignClass[col.align ?? "left"],
                 ].join(" ")}
               >
@@ -57,7 +57,7 @@ export function DataTable<T>({
           {rows.map((row, i) => (
             <tr
               key={getRowKey(row, i)}
-              className="border-b border-gray-50 last:border-b-0 hover:bg-neutral-50 transition-colors"
+              className="border-b app-border last:border-b-0 hover:app-surface-soft transition-colors"
             >
               {columns.map((col) => (
                 <td

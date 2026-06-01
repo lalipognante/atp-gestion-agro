@@ -103,27 +103,38 @@ export function Sidebar() {
       <div className="px-5 pt-6 pb-7">
         <div className="flex items-center gap-2">
           <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-            <path d="M11 2C6 2 2 6 2 11s4 9 9 9 9-4 9-9-4-9-9-9z" fill="#4CAF7D" fillOpacity="0.3" />
-            <path d="M11 5c0 0-4 3-4 7 0 2.2 1.8 4 4 4s4-1.8 4-4c0-4-4-7-4-7z" fill="#4CAF7D" />
-            <path d="M11 5v11" stroke="#0B2218" strokeWidth="1.5" />
+            <path d="M11 2C6 2 2 6 2 11s4 9 9 9 9-4 9-9-4-9-9-9z" fill="#B8D94A" fillOpacity="0.18" />
+            <path d="M11 5c0 0-4 3-4 7 0 2.2 1.8 4 4 4s4-1.8 4-4c0-4-4-7-4-7z" fill="#B8D94A" />
+            <path d="M11 5v11" stroke="#10241A" strokeWidth="1.5" />
           </svg>
-          <span className="text-accent font-bold tracking-tight text-[1.1rem] leading-none">
+          <span className="text-accent font-extrabold tracking-[-0.04em] text-[1.1rem] leading-none">
             ATP Agro
           </span>
         </div>
         <div
           className="text-[0.65rem] font-medium tracking-[0.1em] uppercase mt-0.5 pl-[30px]"
-          style={{ color: "#2E6B52" }}
+          style={{ color: "#6F8A7A" }}
         >
           Versión B1
         </div>
+      </div>
+
+      <div className="px-3 pb-5">
+        <Link
+          href="/labores"
+          onClick={() => setOpen(false)}
+          className="flex items-center justify-center gap-2 rounded-[11px] bg-accent px-3 py-3 text-[0.78rem] font-extrabold text-green-950 shadow-sm transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+        >
+          <span className="text-base leading-none">+</span>
+          Registrar actividad
+        </Link>
       </div>
 
       {/* Nav */}
       <nav className="px-3 flex-1 flex flex-col gap-0.5" role="navigation">
         <div
           className="text-[0.62rem] font-semibold tracking-[0.12em] uppercase px-2 pb-2"
-          style={{ color: "#2E6B52" }}
+          style={{ color: "#6F8A7A" }}
         >
           Navegación
         </div>
@@ -139,26 +150,26 @@ export function Sidebar() {
               className="flex items-center gap-2.5 px-3 py-[9px] rounded-lg text-[0.83rem] font-medium transition-all duration-150 no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               style={
                 isActive
-                  ? { background: "#1A4030", color: "#D6EDE4" }
-                  : { color: "#5A7D6A" }
+                  ? { background: "rgba(184, 217, 74, 0.12)", color: "#E9EEE9" }
+                  : { color: "#91A99A" }
               }
               onMouseEnter={(e) => {
                 if (!isActive) {
                   (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)";
-                  (e.currentTarget as HTMLElement).style.color = "#9EC4B0";
+                  (e.currentTarget as HTMLElement).style.color = "#D5E2DA";
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive) {
                   (e.currentTarget as HTMLElement).style.background = "";
-                  (e.currentTarget as HTMLElement).style.color = "#5A7D6A";
+                  (e.currentTarget as HTMLElement).style.color = "#91A99A";
                 }
               }}
               aria-current={isActive ? "page" : undefined}
             >
               <span
                 className="w-1.5 h-1.5 rounded-full shrink-0"
-                style={{ background: isActive ? "#4CAF7D" : "transparent" }}
+                style={{ background: isActive ? "#B8D94A" : "transparent" }}
                 aria-hidden="true"
               />
               {item.icon}
@@ -170,7 +181,7 @@ export function Sidebar() {
         {/* Divider */}
         <div
           className="h-px my-3 mx-2"
-          style={{ background: "#1A4030" }}
+          style={{ background: "#263D32" }}
           role="separator"
         />
 
@@ -181,24 +192,24 @@ export function Sidebar() {
               href="/configuracion"
               onClick={() => setOpen(false)}
               className="flex items-center gap-2.5 px-3 py-[9px] rounded-lg text-[0.83rem] font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              style={isActive ? { background: "#1A4030", color: "#D6EDE4" } : { color: "#5A7D6A" }}
+              style={isActive ? { background: "rgba(184, 217, 74, 0.12)", color: "#E9EEE9" } : { color: "#91A99A" }}
               onMouseEnter={(e) => {
                 if (!isActive) {
                   (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)";
-                  (e.currentTarget as HTMLElement).style.color = "#9EC4B0";
+                  (e.currentTarget as HTMLElement).style.color = "#D5E2DA";
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive) {
                   (e.currentTarget as HTMLElement).style.background = "";
-                  (e.currentTarget as HTMLElement).style.color = "#5A7D6A";
+                  (e.currentTarget as HTMLElement).style.color = "#91A99A";
                 }
               }}
               aria-current={isActive ? "page" : undefined}
             >
               <span
                 className="w-1.5 h-1.5 rounded-full shrink-0"
-                style={{ background: isActive ? "#4CAF7D" : "transparent" }}
+                style={{ background: isActive ? "#B8D94A" : "transparent" }}
                 aria-hidden="true"
               />
               <svg width="15" height="15" fill="none" viewBox="0 0 15 15" aria-hidden="true">
@@ -214,12 +225,12 @@ export function Sidebar() {
       {/* User */}
       <div
         className="px-5 py-4 mt-auto border-t"
-        style={{ borderColor: "#1A4030" }}
+        style={{ borderColor: "#263D32" }}
       >
         <div className="flex items-center gap-2.5">
           <div
             className="w-8 h-8 rounded-full flex items-center justify-center font-semibold text-[0.75rem] shrink-0"
-            style={{ background: "#235440", color: "#D6EDE4" }}
+            style={{ background: "#263D32", color: "#B8D94A" }}
             aria-hidden="true"
           >
             JR
@@ -235,9 +246,9 @@ export function Sidebar() {
           <button
             onClick={handleLogout}
             className="p-1 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            style={{ color: "#2E6B52" }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#7DC4A4")}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "#2E6B52")}
+            style={{ color: "#6F8A7A" }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#B8D94A")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "#6F8A7A")}
             aria-label="Cerrar sesión"
             title="Salir"
           >
@@ -261,7 +272,7 @@ export function Sidebar() {
       {/* ── Mobile hamburger ──────────────────────────── */}
       <button
         className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg shadow-lg"
-        style={{ background: "#0B2218", color: "#4CAF7D" }}
+        style={{ background: "#10241A", color: "#B8D94A" }}
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Cerrar menú" : "Abrir menú"}
       >
@@ -293,7 +304,7 @@ export function Sidebar() {
           "w-[220px]",
           open ? "translate-x-0" : "-translate-x-full md:translate-x-0",
         ].join(" ")}
-        style={{ background: "#0B2218" }}
+        style={{ background: "#10241A" }}
         aria-label="Navegación principal"
       >
         {navContent}
