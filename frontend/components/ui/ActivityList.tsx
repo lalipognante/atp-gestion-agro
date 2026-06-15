@@ -10,9 +10,9 @@ const SOURCE_STYLES: Record<
   { bg: string; iconColor: string }
 > = {
   financial:      { bg: "#EEF7F2", iconColor: "#3A8A68" },
-  livestock:      { bg: "#FEF5F0", iconColor: "#C0705A" },
+  livestock:      { bg: "#F3F7E7", iconColor: "#7A8A10" },
   stock:          { bg: "#FAFBE8", iconColor: "#7A8A10" },
-  thirdPartyWork: { bg: "#F0F4FF", iconColor: "#3A5AA0" },
+  thirdPartyWork: { bg: "#EEF7F2", iconColor: "#1E7A4E" },
 };
 
 const SOURCE_LABEL: Record<LastMovement["source"], string> = {
@@ -45,16 +45,16 @@ function ActivityIcon({ source }: { source: LastMovement["source"] }) {
   if (source === "livestock") {
     return (
       <svg width="14" height="14" fill="none" viewBox="0 0 14 14">
-        <ellipse cx="7" cy="5.5" rx="4" ry="2.5" stroke="#C0705A" strokeWidth="1.4" />
-        <path d="M3 8c0 1.38 1.79 2.5 4 2.5s4-1.12 4-2.5" stroke="#C0705A" strokeWidth="1.4" />
+        <ellipse cx="7" cy="5.5" rx="4" ry="2.5" stroke="#7A8A10" strokeWidth="1.4" />
+        <path d="M3 8c0 1.38 1.79 2.5 4 2.5s4-1.12 4-2.5" stroke="#7A8A10" strokeWidth="1.4" />
       </svg>
     );
   }
   if (source === "thirdPartyWork") {
     return (
       <svg width="14" height="14" fill="none" viewBox="0 0 14 14">
-        <path d="M2 11L7 3l5 8H2z" stroke="#3A5AA0" strokeWidth="1.4" strokeLinejoin="round" />
-        <path d="M7 7v2.5" stroke="#3A5AA0" strokeWidth="1.4" strokeLinecap="round" />
+        <path d="M2 11L7 3l5 8H2z" stroke="#1E7A4E" strokeWidth="1.4" strokeLinejoin="round" />
+        <path d="M7 7v2.5" stroke="#1E7A4E" strokeWidth="1.4" strokeLinecap="round" />
       </svg>
     );
   }
@@ -108,7 +108,7 @@ export function ActivityList({ items }: ActivityListProps) {
             key={item.id}
             className={[
               "flex gap-2.5 py-2.5",
-              !isLast ? "border-b border-gray-50" : "",
+              !isLast ? "border-b app-border" : "",
             ].join(" ")}
           >
             {/* Icon */}
