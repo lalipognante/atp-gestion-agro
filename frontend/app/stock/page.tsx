@@ -5,6 +5,7 @@ import { getCampaigns } from "@/services/campaigns";
 import { Header } from "@/components/layout/Header";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { DataTable, type TableColumn } from "@/components/ui/DataTable";
+import { PageIntro, SummaryMetric } from "@/components/ui/ProductPage";
 import { NuevoStockDialog } from "@/components/forms/NuevoStockDialog";
 import { VoidButton } from "@/components/forms/VoidButton";
 import { formatNumber, formatDate } from "@/lib/utils";
@@ -24,9 +25,9 @@ const MOVEMENT_TYPE_COLORS: Record<string, { bg: string; color: string }> = {
   HARVEST:              { bg: "#FAFBE8", color: "#7A8A10" },
   PURCHASE:             { bg: "#EEF7F2", color: "#2E6B52" },
   SALE:                 { bg: "#FEF0F0", color: "#C0505A" },
-  TRANSFER:             { bg: "#F0F4FF", color: "#3A5AA0" },
-  ADJUSTMENT:           { bg: "#FEF5F0", color: "#C0705A" },
-  INTERNAL_CONSUMPTION: { bg: "#F5F0FE", color: "#7A50A0" },
+  TRANSFER:             { bg: "#EEF7F2", color: "#1E7A4E" },
+  ADJUSTMENT:           { bg: "#F3F7E7", color: "#657D1B" },
+  INTERNAL_CONSUMPTION: { bg: "#F3F7E7", color: "#657D1B" },
 };
 
 function MovementTypeBadge({ type }: { type: string }) {
@@ -148,40 +149,34 @@ export default async function StockPage() {
       <Header
         title="Stock"
         subtitle="Movimientos de inventario agropecuario"
-        actions={<NuevoStockDialog campaigns={campaigns} />}
       />
 
       <div className="flex-1 overflow-auto">
-        <div className="p-4 sm:p-6 lg:p-7 flex flex-col gap-5 max-w-[1400px]">
+        <div className="mx-auto flex max-w-[1440px] flex-col gap-5 p-4 sm:p-6 lg:p-7">
+          <PageIntro
+            eyebrow="Stock operativo"
+            title="Inventario disponible y movimientos trazables."
+            description="Entradas, ventas, ajustes y consumos internos con lectura rápida del saldo neto por producto."
+            actions={<NuevoStockDialog campaigns={campaigns} />}
+          />
 
           {/* ── Resumen neto por producto ─────────────── */}
           {netByProduct.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               {netByProduct.map((p) => (
-                <div
+                <SummaryMetric
                   key={p.product}
-                  className="bg-white rounded-[14px] border border-gray-200 px-4 py-3"
-                >
-                  <div className="text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-neutral-400 mb-1">
-                    {p.product}
-                  </div>
-                  <div
-                    className="text-[1.3rem] font-bold font-mono"
-                    style={{ color: p.net >= 0 ? "#2E6B52" : "#C0505A" }}
-                  >
-                    {formatNumber(p.net)}
-                    <span className="text-[0.75rem] font-medium text-neutral-500 ml-1">
-                      {p.unit}
-                    </span>
-                  </div>
-                  <div className="text-[0.68rem] text-neutral-400 mt-0.5">neto en stock</div>
-                </div>
+                  label={p.product}
+                  value={`${formatNumber(p.net)} ${p.unit}`}
+                  detail="Neto en stock"
+                  tone={p.net >= 0 ? "positive" : "danger"}
+                />
               ))}
             </div>
           )}
 
           <SectionCard
-            title="Movimientos de Stock"
+            title="Bitácora de stock"
             actions={
               movements.length > 0 ? (
                 <span className="text-[0.7rem] text-neutral-400">

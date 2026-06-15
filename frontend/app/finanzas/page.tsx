@@ -5,10 +5,9 @@ import { getObligations } from "@/services/obligations";
 import { getEmployees, getSalaryPayments, getSalaryAdvances } from "@/services/employees";
 import { getCampaigns } from "@/services/campaigns";
 import { Header } from "@/components/layout/Header";
-import { KpiCard } from "@/components/ui/KpiCard";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { DataTable, type TableColumn } from "@/components/ui/DataTable";
-import { PageIntro } from "@/components/ui/ProductPage";
+import { PageIntro, SummaryMetric } from "@/components/ui/ProductPage";
 import { NuevoFinancieroDialog } from "@/components/forms/NuevoFinancieroDialog";
 import { NuevaObligacionDialog } from "@/components/forms/NuevaObligacionDialog";
 import { MarcarPagadaButton } from "@/components/forms/MarcarPagadaButton";
@@ -320,10 +319,6 @@ export default async function FinanzasPage() {
   }
   const monthlyResult = monthlyIncome - monthlyExpense;
   const resultPositive = monthlyResult >= 0;
-  const resultProgress =
-    monthlyIncome > 0
-      ? Math.min(100, (monthlyResult / monthlyIncome) * 100)
-      : 0;
 
   const pendingObligations = obligations.filter((o) => o.status === "PENDING");
   const totalPending = pendingObligations.reduce((s, o) => s + Number(o.amount), 0);
@@ -396,7 +391,7 @@ export default async function FinanzasPage() {
       />
 
       <div className="flex-1 overflow-auto">
-        <div className="p-6 lg:p-7 flex flex-col gap-5 max-w-[1400px]">
+        <div className="mx-auto flex max-w-[1440px] flex-col gap-5 p-4 sm:p-6 lg:p-7">
           <PageIntro
             eyebrow="Economía"
             title="Caja, compromisos y pagos del establecimiento."
@@ -430,54 +425,33 @@ export default async function FinanzasPage() {
 
           {/* ── KPI Row ─────────────────────────────────── */}
           <div
-            className="grid gap-3.5"
-            style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}
+            className="grid grid-cols-2 gap-3 lg:grid-cols-4"
             role="region"
             aria-label="Indicadores financieros del mes"
           >
-            <KpiCard
-              label="Ingresos del Mes"
+            <SummaryMetric
+              label="Ingresos del mes"
               value={formatCurrency(monthlyIncome)}
-              trend={{ direction: "up", label: "mes en curso" }}
-              progress={{ value: 100, color: "#1E7A4E" }}
+              detail="Mes en curso"
+              tone="positive"
             />
-            <KpiCard
-              label="Egresos del Mes"
+            <SummaryMetric
+              label="Egresos del mes"
               value={formatCurrency(monthlyExpense)}
-              trend={{ direction: monthlyExpense > 0 ? "down" : "up", label: "mes en curso" }}
-              progress={{
-                value: monthlyIncome > 0
-                  ? Math.min(100, (monthlyExpense / monthlyIncome) * 100)
-                  : 0,
-                color: "#E07070",
-              }}
+              detail="Mes en curso"
+              tone={monthlyExpense > 0 ? "danger" : "default"}
             />
-            <KpiCard
-              label="Resultado del Mes"
+            <SummaryMetric
+              label="Resultado"
               value={formatCurrency(monthlyResult)}
-              trend={{
-                direction: resultPositive ? "up" : "down",
-                label: resultPositive ? "positivo" : "negativo",
-              }}
-              progress={{
-                value: Math.max(0, resultProgress),
-                color: resultPositive ? "#1E7A4E" : "#D16B6B",
-              }}
-              accentBorder
-              valueColor={resultPositive ? "#1E7A4E" : "#C0505A"}
+              detail={resultPositive ? "Balance positivo" : "Requiere atención"}
+              tone={resultPositive ? "positive" : "danger"}
             />
-            <KpiCard
-              label="Obligaciones Pendientes"
+            <SummaryMetric
+              label="A pagar"
               value={formatCurrency(totalPending)}
-              trend={{
-                direction: pendingObligations.length > 0 ? "down" : "up",
-                label: `${pendingObligations.length} pendiente${pendingObligations.length !== 1 ? "s" : ""}`,
-              }}
-              progress={{
-                value: pendingObligations.length > 0 ? 100 : 0,
-                color: "#E07070",
-              }}
-              valueColor={pendingObligations.length > 0 ? "#C0505A" : undefined}
+              detail={`${pendingObligations.length} pendiente${pendingObligations.length !== 1 ? "s" : ""}`}
+              tone={pendingObligations.length > 0 ? "danger" : "positive"}
             />
           </div>
 

@@ -91,6 +91,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [quickOpen, setQuickOpen] = useState(false);
 
   function handleLogout() {
     logout();
@@ -120,14 +121,14 @@ export function Sidebar() {
       </div>
 
       <div className="px-3 pb-6">
-        <Link
-          href="/labores"
-          onClick={() => setOpen(false)}
-          className="flex items-center justify-center gap-2 rounded-[12px] bg-accent px-3 py-3.5 text-[0.8rem] font-extrabold text-green-950 shadow-[0_10px_28px_rgba(184,217,74,0.18)] transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+        <button
+          type="button"
+          onClick={() => setQuickOpen(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-[12px] bg-accent px-3 py-3.5 text-[0.8rem] font-extrabold text-green-950 shadow-[0_10px_28px_rgba(184,217,74,0.18)] transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
         >
           <span className="text-base leading-none">+</span>
           Registrar actividad
-        </Link>
+        </button>
       </div>
 
       {/* Nav */}
@@ -309,6 +310,51 @@ export function Sidebar() {
       >
         {navContent}
       </aside>
+
+      {quickOpen && (
+        <div className="fixed inset-0 z-[70] overflow-y-auto bg-green-950/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="quick-activity-title">
+          <div className="mx-auto mt-10 max-w-3xl rounded-[20px] border app-border app-surface-elevated p-5 app-shadow">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[0.66rem] font-extrabold uppercase tracking-[0.15em] text-green-700">Captura rápida</p>
+                <h2 id="quick-activity-title" className="mt-2 text-lg font-extrabold tracking-[-0.04em] text-neutral-900">Registrar actividad</h2>
+                <p className="mt-1 text-[0.78rem] text-neutral-400">Elegí el flujo principal. En esta etapa te llevo al módulo correcto sin duplicar lógica.</p>
+              </div>
+              <button type="button" onClick={() => setQuickOpen(false)} className="rounded-btn border app-border app-surface-soft p-2 text-neutral-400" aria-label="Cerrar captura rápida">
+                <svg width="16" height="16" fill="none" viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M3 3l10 10M13 3 3 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {[
+                { href: "/stock", title: "Movimiento de stock", detail: "Cosecha, compra, venta, ajuste o consumo." },
+                { href: "/finanzas", title: "Movimiento financiero", detail: "Ingreso, egreso, obligación, sueldo o adelanto." },
+                { href: "/campos", title: "Entrega de contrato", detail: "Registrar entrega en quintales o revisar saldo." },
+                { href: "/labores", title: "Labor propia", detail: "Trabajos internos por lote y responsable." },
+                { href: "/terceros", title: "Labor contratada", detail: "Contratistas, deuda y trabajos externos." },
+                { href: "/hacienda", title: "Hacienda / sanidad", detail: "Movimiento ganadero o registro sanitario." },
+              ].map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => {
+                    setQuickOpen(false);
+                    setOpen(false);
+                  }}
+                  className="group rounded-[14px] border app-border app-surface-soft px-4 py-4 transition hover:border-accent hover:bg-accent/10"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-[0.85rem] font-extrabold text-neutral-900">{item.title}</h3>
+                    <span className="text-lg text-neutral-400 transition group-hover:translate-x-1 group-hover:text-green-700">→</span>
+                  </div>
+                  <p className="mt-1 text-[0.72rem] leading-5 text-neutral-400">{item.detail}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

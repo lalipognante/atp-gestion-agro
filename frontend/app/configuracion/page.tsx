@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { getCurrentUser } from "@/services/user";
 import { Header } from "@/components/layout/Header";
 import { SectionCard } from "@/components/ui/SectionCard";
+import { PageIntro, SummaryMetric } from "@/components/ui/ProductPage";
 
 // ─── Role badge ────────────────────────────────────────────
 function RoleBadge({ role }: { role: "ADMIN" | "VIEWER" }) {
@@ -13,7 +14,7 @@ function RoleBadge({ role }: { role: "ADMIN" | "VIEWER" }) {
       style={
         isAdmin
           ? { background: "#EEF7F2", color: "#2E6B52" }
-          : { background: "#F0F4FF", color: "#3A5AA0" }
+          : { background: "#F3F7E7", color: "#657D1B" }
       }
     >
       {isAdmin ? "Administrador" : "Visualizador"}
@@ -24,7 +25,7 @@ function RoleBadge({ role }: { role: "ADMIN" | "VIEWER" }) {
 // ─── Row helper ───────────────────────────────────────────
 function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+    <div className="flex items-center justify-between border-b app-border py-3 last:border-b-0">
       <span className="text-[0.8rem] font-semibold text-neutral-500 uppercase tracking-[0.06em]">
         {label}
       </span>
@@ -81,12 +82,37 @@ export default async function ConfiguracionPage() {
       />
 
       <div className="flex-1 overflow-auto">
-        <div className="p-6 lg:p-7 flex flex-col gap-5 max-w-[800px]">
+        <div className="mx-auto flex max-w-[960px] flex-col gap-5 p-4 sm:p-6 lg:p-7">
+          <PageIntro
+            eyebrow="Configuración"
+            title="Cuenta, permisos y contexto del sistema."
+            description="Información mínima para entender el acceso actual sin convertir la pantalla en un panel administrativo pesado."
+          />
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <SummaryMetric
+              label="Rol activo"
+              value={user.role === "ADMIN" ? "Admin" : "Viewer"}
+              detail={user.role === "ADMIN" ? "Puede operar" : "Solo lectura"}
+              tone={user.role === "ADMIN" ? "positive" : "default"}
+            />
+            <SummaryMetric
+              label="Sistema"
+              value="ATP"
+              detail="Gestión Agro B1"
+            />
+            <SummaryMetric
+              label="Acceso"
+              value="Activo"
+              detail={`Usuario ${user.userId}`}
+              tone="positive"
+            />
+          </div>
 
           {/* ── Profile card ─────────────────────────────── */}
           <SectionCard title="Perfil de Usuario">
             {/* Avatar */}
-            <div className="flex items-center gap-4 mb-5 pb-4 border-b border-gray-100">
+            <div className="mb-5 flex items-center gap-4 border-b app-border pb-4">
               <div
                 className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-[1.1rem] shrink-0"
                 style={{ background: "#1A4030", color: "#D6EDE4" }}

@@ -2,9 +2,9 @@ export const dynamic = "force-dynamic";
 
 import { getHaciendaDashboard, getHealthRecords, getLivestockMovements } from "@/services/hacienda";
 import { Header } from "@/components/layout/Header";
-import { KpiCard } from "@/components/ui/KpiCard";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { DataTable, type TableColumn } from "@/components/ui/DataTable";
+import { CompactEmpty, PageIntro, SummaryMetric } from "@/components/ui/ProductPage";
 import { NuevoHaciendaDialog } from "@/components/forms/NuevoHaciendaDialog";
 import { NuevoSanidadDialog } from "@/components/forms/NuevoSanidadDialog";
 import { VoidButton } from "@/components/forms/VoidButton";
@@ -38,11 +38,11 @@ const MOV_TYPE_LABEL: Record<string, string> = {
 
 const MOV_TYPE_COLOR: Record<string, { bg: string; color: string }> = {
   INCOME:     { bg: "#EEF7F2", color: "#2E6B52" },
-  PURCHASE:   { bg: "#EEF4FF", color: "#3B5FBF" },
+  PURCHASE:   { bg: "#F3F7E7", color: "#657D1B" },
   SALE:       { bg: "#FFF8EC", color: "#B06A10" },
   DEATH:      { bg: "#FEF0F0", color: "#C0505A" },
-  TRANSFER:   { bg: "#F5F5F5", color: "#555" },
-  ADJUSTMENT: { bg: "#F5F5F5", color: "#555" },
+  TRANSFER:   { bg: "#EEF7F2", color: "#1E7A4E" },
+  ADJUSTMENT: { bg: "#F0F3EE", color: "#68746F" },
 };
 
 const LIVESTOCK_TYPE_LABEL: Record<string, string> = {
@@ -91,7 +91,7 @@ const HEALTH_COLS: TableColumn<HealthRecord>[] = [
     render: (row) => (
       <span
         className="text-[0.7rem] font-semibold px-2 py-0.5 rounded-full"
-        style={{ background: "#EEF4FF", color: "#3B5FBF" }}
+        style={{ background: "#F3F7E7", color: "#657D1B" }}
       >
         {TREATMENT_LABEL[row.treatmentType] ?? row.treatmentType}
       </span>
@@ -296,45 +296,49 @@ export default async function HaciendaPage() {
       <Header
         title="Hacienda"
         subtitle="Rodeo y movimientos ganaderos"
-        actions={
-          <div className="flex gap-2">
-            <NuevoSanidadDialog />
-            <NuevoHaciendaDialog />
-          </div>
-        }
       />
 
       <div className="flex-1 overflow-auto">
-        <div className="p-4 sm:p-6 lg:p-7 flex flex-col gap-5 max-w-[1400px]">
+        <div className="mx-auto flex max-w-[1440px] flex-col gap-5 p-4 sm:p-6 lg:p-7">
+          <PageIntro
+            eyebrow="Rodeo y sanidad"
+            title="Hacienda ordenada para decidir rápido."
+            description="Stock ganadero, ventas, tratamientos sanitarios y movimientos del rodeo en una vista operativa."
+            actions={
+              <div className="flex flex-wrap gap-2">
+                <NuevoSanidadDialog />
+                <NuevoHaciendaDialog />
+              </div>
+            }
+          />
 
           {/* ── KPI Row ─────────────────────────────────── */}
           <div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"
+            className="grid grid-cols-2 gap-3 lg:grid-cols-4"
             role="region"
             aria-label="Indicadores de hacienda"
           >
-            <KpiCard
-              label="Total Cabezas"
+            <SummaryMetric
+              label="Cabezas actuales"
               value={formatNumber(data.totalHeads)}
-              trend={{ direction: "up", label: "rodeo actual" }}
-              progress={{ value: 70, color: "#C8D84B" }}
+              detail="Rodeo registrado"
+              tone="positive"
             />
-            <KpiCard
-              label="Ingreso por Ventas"
+            <SummaryMetric
+              label="Ingreso por ventas"
               value={formatCurrency(data.totalCattleSaleIncome)}
-              trend={{
-                direction: data.totalCattleSaleIncome > 0 ? "up" : "down",
-                label: "ventas acumuladas",
-              }}
-              progress={{ value: data.totalCattleSaleIncome > 0 ? 60 : 0, color: "#4CAF7D" }}
-              accentBorder
-              valueColor={data.totalCattleSaleIncome > 0 ? "#2E6B52" : "#C0505A"}
+              detail="Ventas acumuladas"
+              tone={data.totalCattleSaleIncome > 0 ? "positive" : "default"}
             />
-            <KpiCard
-              label="Registros Sanitarios"
+            <SummaryMetric
+              label="Sanidad"
               value={String(healthRecords.length)}
-              trend={{ direction: "up", label: "total histórico" }}
-              progress={{ value: Math.min(100, healthRecords.length * 10), color: "#3B5FBF" }}
+              detail="Registros históricos"
+            />
+            <SummaryMetric
+              label="Movimientos"
+              value={String(movements.length)}
+              detail="Operaciones ganaderas"
             />
           </div>
 
@@ -351,12 +355,10 @@ export default async function HaciendaPage() {
               }
             >
               {categoryRows.length === 0 ? (
-                <p className="text-[0.82rem] text-neutral-400 py-4 text-center">
-                  Sin movimientos registrados
-                </p>
+                <CompactEmpty>Sin movimientos registrados</CompactEmpty>
               ) : (
                 <>
-                  <div className="flex items-center justify-between px-[14px] pb-[10px] border-b border-gray-200">
+                  <div className="flex items-center justify-between border-b app-border px-[14px] pb-[10px]">
                     <span className="text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-neutral-400">
                       Categoría
                     </span>
@@ -367,7 +369,7 @@ export default async function HaciendaPage() {
                   {categoryRows.map((row) => (
                     <div
                       key={row.category}
-                      className="flex items-center justify-between px-[14px] py-[11px] border-b border-gray-50 last:border-b-0 hover:bg-neutral-50 transition-colors"
+                      className="flex items-center justify-between border-b app-border px-[14px] py-[11px] transition-colors last:border-b-0 hover:bg-green-700/5"
                     >
                       <span className="font-medium text-[0.82rem] text-neutral-900">
                         {CATEGORY_LABEL[row.category] ?? row.category}
